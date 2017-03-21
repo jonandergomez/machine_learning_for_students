@@ -1,9 +1,12 @@
-# machine_learning_for_students
+# Machine Learning for students
 
 * This is a repository of code used in my classes for my students.
- Neverhtheless,  if you find it useful for your purposes enjoy it.
+
+* Neverhtheless,  if you find it useful for your purposes enjoy it.
  But, please, do not consider this a stable product or a definitive
  version. This repository will be inmerse in a continuous changing.
+
+* Of course, this code contains errors.
 
 * The code in this repository is mainly written in Python.
 
