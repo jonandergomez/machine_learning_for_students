@@ -16,7 +16,16 @@
 
 # Usage 
 
-Comming nearly
+Comming nearly. 
+
+## Setting the environment to use this code from your Python code
+
+For using this library set the environment variable **PYTHONPATH** to the directory
+where the repository is placed. Usually, I place the directories **ann**, **hmm**,
+**machine_learning**, and **testing** in **${HOME}/pyhon**, so set the following 
+line in your .profile or .bashrc file.
+
+**export PYTHONPATH="${HOME}/python"**
 
 # Authors
 
