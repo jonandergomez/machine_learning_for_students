@@ -22,8 +22,8 @@ Comming nearly.
 
 For using this library set the environment variable **PYTHONPATH** to the directory
 where the repository is placed. Usually, I place the directories **ann**, **hmm**,
-**machine_learning**, and **testing** in **${HOME}/pyhon**, so set the following 
-line in your .profile or .bashrc file.
+**machine_learning**, and **testing** in **${HOME}/pyhon**. Then I set the following 
+line in my .profile or .bashrc file.
 
         export PYTHONPATH="${HOME}/python"
 
