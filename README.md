@@ -22,3 +22,7 @@ Comming nearly
 
 * Code written and maintanined by [Jon Ander Gómez Adrián](http://www.dsic.upv.es/~jon).
 
+
+# How to get it
+
+git clone https://github.com/jonandergomez/machine_learning_for_students.git
