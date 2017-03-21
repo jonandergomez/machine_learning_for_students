@@ -9,6 +9,7 @@
 
 * There is also part of the Python code to be used in a Spark environment.
 
+* This code uses [Scikit-Learn](http://scikit-learn.org/) and [Pandas](http://pandas.pydata.org/).
 
 # Usage 
 
