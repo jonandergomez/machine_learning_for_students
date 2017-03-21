@@ -25,7 +25,7 @@ where the repository is placed. Usually, I place the directories **ann**, **hmm*
 **machine_learning**, and **testing** in **${HOME}/pyhon**, so set the following 
 line in your .profile or .bashrc file.
 
-**export PYTHONPATH="${HOME}/python"**
+        export PYTHONPATH="${HOME}/python"
 
 # Authors
 
