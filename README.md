@@ -16,6 +16,6 @@ Comming nearly
 
 # Authors
 
-    * Code written and maintanined by [link](http://www.dsic.upv.es/~jon) Jon Ander Gómez Adrián
+    * Code written and maintanined by [Jon Ander Gómez Adrián](http://www.dsic.upv.es/~jon).
 
 
