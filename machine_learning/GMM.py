@@ -150,7 +150,15 @@ class GMM:
                 self.L[c] = numpy.diag( numpy.sqrt( numpy.diag( self.sigma[c] ) ) )
                 self.log_determinants[c] = numpy.log( numpy.diag( self.sigma[c] ) ).sum()
             else:
-                self.L[c] = numpy.linalg.cholesky( self.sigma[c] )
+                try:
+                    self.L[c] = numpy.linalg.cholesky( self.sigma[c] )
+                except Exception as e: 
+                    self.save_to_text( 'wrong-gmm' )
+                    print( c )
+                    print( numpy.diag( self.sigma[c] ) )
+                    print( self.sigma[c] )
+                    #sys.exit(100)
+                    raise e
                 self.log_determinants[c] = 2 * numpy.log( numpy.diag( self.L[c] ) ).sum() # det(sigma) = det(L)*det(L)
             # We compute this in any case, but it is used only when working with diagonal covariance matrices.
             self.sigma_diag_inv[c] = 1.0 / numpy.diag( self.sigma[c] )

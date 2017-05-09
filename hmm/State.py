@@ -43,16 +43,14 @@ class State:
         if input_file is not None:
             self.load( input_file, first_line )
         elif self.num_symbols is not None and self.num_symbols > 0:
-            #self.B = numpy.ones( num_symbols ) / num_symbols # Bad idea to start with a uniform distribution
             """
             The following initialization guarantees that a small asymmetry is provided at the beginning in
             order to avoid that the updates for all the parameters are allways the same.
             The method normalize() ensures that sum(self.B) is equal to one.
             """
             self.B = numpy.random.rand( num_symbols ) * 1.0e-5
-            #self.B_accumulator = numpy.random.rand( len(self.B), 2 ) + 1.0e-2
+        if self.B is not None:
             self.B_accumulator = numpy.copy( self.B )
-        #self.B_accumulator = numpy.copy( self.B )
         self.normalize()
         #self.reset_accumulators()
         #
@@ -68,7 +66,6 @@ class State:
     def reset_accumulators( self ):
         if self.B is not None:
             self.B_accumulator = numpy.zeros( len(self.B) )
-            #self.B_accumulator = numpy.random.rand( len(self.B), 2 ) + 1.0e-2
         else:
             self.gmm_accumulator = GMM( n_components=self.gmm.n_components, dim=self.gmm.dim, covar_type=self.gmm.covar_type, min_var=self.gmm.min_var, _for_accumulating=True )
 
