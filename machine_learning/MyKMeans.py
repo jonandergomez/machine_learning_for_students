@@ -75,7 +75,9 @@ class KMeans:
         iteration=0
         changes_counter=1
         epsilon = 1.0e-4
+        #print( '*', iteration, num_iter, changes_counter, self.improvement() )
         while iteration < num_iter and changes_counter > 0 and self.improvement() > epsilon:
+            #print( '-', iteration, num_iter, changes_counter, self.improvement() )
             changes_counter = self.fit_iteration( X )
             iteration=iteration+1
 
@@ -83,7 +85,7 @@ class KMeans:
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
-    def fit_iteration( self, X, num_iter=0 ):
+    def fit_iteration( self, X ):
 
         for c in range( self.n_clusters ):
             samples_in_cluster = X[ self.cluster_pred == c ]
