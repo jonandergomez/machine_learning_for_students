@@ -39,7 +39,7 @@ class LinearDiscriminant:
         # Prepare Z as a matrix of one-hot vectors
         Z = numpy.zeros( [len(Y), self.num_classes], dtype=int )
         for n in range(len(Y)):
-            Z[n][Y[n]] = 1
+            Z[n][int(Y[n])] = 1
 
         #
         # W.T = dot( dot( inv( dot( X.T, X) - l2_penalty*I), X.T ), Z )
