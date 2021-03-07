@@ -48,9 +48,8 @@ class LinearDiscriminant:
         temp = numpy.dot( X.T, X )
         temp = temp - self.l2_penalty * numpy.identity( temp.shape[0] )
         temp = numpy.linalg.inv( temp )
-        temp = numpy.dot( temp, X.T )
 
-        self.weights = numpy.dot( temp, Z )
+        self.weights = numpy.dot( temp, numpy.dot( X.T, Z ) )
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
@@ -58,5 +57,8 @@ class LinearDiscriminant:
         Y = numpy.zeros( len(X), dtype=int )
         Z = numpy.dot( X, self.weights )
         Y = numpy.argmax( Z, axis=1 )
-        return Y
+        y = numpy.zeros( len(X), dtype=type(self.targets[0]) )
+        for i in range(len(y)):
+            y[i] = self.targets[ Y[i] ]
+        return y
     # ------------------------------------------------------------------------------

@@ -274,6 +274,9 @@ class GMM:
         _max_log_density = _log_densities.max(axis=0)
         _densities = numpy.exp( _log_densities - _max_log_density )
         _log_likelihood = numpy.log( _densities.sum(axis=0) ) + _max_log_density
+        if _log_likelihood.any() > 0.0:
+            print( _log_likelihood )
+            print( _densities.sum(axis=0) )
         return _densities / _densities.sum(axis=0), _log_likelihood
     # ------------------------------------------------------------------------------
 
@@ -419,27 +422,27 @@ class GMM:
         m = 0
         if self.covar_type == 'spherical' :
             # Free parameters are the means, the a priori probabilities
-            m = self.n_components * ( self.dim * 2 )
+            m = self.n_components * ( self.dim + 1 )
             #
         elif self.covar_type == 'tied_diagonal' :
             # Free parameters are the means, the a priori probabilities and
             # only one time of the elements of the diagonal covariance matrix
-            m = self.n_components * ( self.dim * 2 ) + self.dim
+            m = self.n_components * ( self.dim + 1 ) + self.dim
             #
         elif self.covar_type == 'diagonal' :
             # Free parameters are the means, the a priori probabilities and
             # the elements of the diagonal covariance matrix of each Gaussian
-            m = self.n_components * ( self.dim * 3 )
+            m = self.n_components * ( self.dim + 1 + self.dim )
             #
         elif self.covar_type == 'tied' :
             # Free parameters are the means, the a priori probabilities and
             # the elements of the full tied covariance matrix
-            m = self.n_components * ( self.dim * 2 ) + self.dim * self.dim
+            m = self.n_components * ( self.dim + 1 ) + self.dim * self.dim
             #
         else:
             # Free parameters are the means, the a priori probabilities and
             # the elements of the full covariance matrix of each Gaussian
-            m = self.n_components * ( self.dim * 2 + self.dim * self.dim )
+            m = self.n_components * ( self.dim + 1 + self.dim * self.dim )
             #
         #
         aic =     2 * m - 2 * logL
@@ -449,9 +452,55 @@ class GMM:
     # ---------------------------------------------------------------------------------            
 
     # ---------------------------------------------------------------------------------            
+    def purge( self, log_file=None ):
+        #
+        for i in range(self.n_components):
+            log_file.write( "class %d with %d samples assigned\n" % (i,self.acc_sample_counter[i]) )
+        for i in range(self.n_components):
+            if self.acc_sample_counter[i] == 0:
+                log_file.write( "class %d with mean %s \n" % (i,str(self.mu[i])) )
+        #
+        if min(self.acc_sample_counter) == 0:
+            if log_file is not None:
+                log_file.write( "Purging classes with 0 samples assigned. Passing from %d to " % self.n_components )
+            #
+            self.prioris = self.prioris[ self.acc_sample_counter != 0 ].copy()
+            self.log_prioris  = numpy.log( self.prioris )
+            #
+            temp_mu = []
+            temp_sigma = []
+            temp_L = []
+            temp_sigma_diag_inv = []
+            for i in range(self.n_components):
+                if self.acc_sample_counter[i] > 0:
+                    temp_mu.append( self.mu[i] )
+                    temp_sigma.append( self.sigma[i] )
+                    temp_L.append( self.L[i] )
+                    temp_sigma_diag_inv.append( self.sigma_diag_inv[i] )
+            #
+            self.mu = temp_mu
+            self.sigma = temp_sigma
+            self.L = temp_L
+            self.sigma_diag_inv = temp_sigma_diag_inv
+            #
+            self.n_components = len(self.prioris)
+            #
+            self.acc_sample_counter = self.acc_sample_counter[ self.acc_sample_counter != 0 ].copy()
+            #
+            self.log_determinants = numpy.ones( self.n_components )
+            self.acc_posteriors = numpy.zeros( self.n_components )
+            #
+            if log_file is not None:
+                log_file.write( "%d gaussians\n" % self.n_components )
+            #
+            self.compute_derived_parameters()
+        #
+    # ---------------------------------------------------------------------------------            
+
+    # ---------------------------------------------------------------------------------            
     def split( self, log_file=None ):
         if log_file is None: log_file=sys.stdout
-        if self.n_components >= 2:
+        if self.n_components >= 4:
             # Number of Samples per Gaussian
             nsg = []
             for i in range(self.n_components):
@@ -500,7 +549,12 @@ class GMM:
 
     # ---------------------------------------------------------------------------------            
     def split_gaussian( self, c ):
-        w, v = numpy.linalg.eigh( self.sigma[c] )        
+        #
+        for i in range(self.n_components):
+            if self.mu[c].sum() == 0 :
+                raise Exception( "The mean is completely zero!" )
+            if numpy.diag(self.sigma[c]).sum() == 0 :
+                raise Exception( "The diagonal is completely zero!" )
         #
         self.n_components     = self.n_components+1
         #
@@ -512,15 +566,22 @@ class GMM:
         self.mu.append( numpy.zeros( self.dim ) )
         if self.covar_type in GMM.covar_diagonal_types:
             _pseudo_volume_ = 1.0
-            #self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * numpy.sqrt(numpy.diag( self.sigma[c] ))
-            #self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * numpy.sqrt(numpy.diag( self.sigma[c] ))
-            self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * v[-1]
-            self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * v[-1]
+            v = numpy.sqrt(numpy.diag( self.sigma[c] ))
+            self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * v
+            self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * v
+            #self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * v[:,-1]
+            #self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * v[:,-1]
         else:
+            w, v = numpy.linalg.eigh( self.sigma[c] )        
             _pseudo_volume_ = 1.0
-            #_pseudo_volume_ = 0.5 * numpy.sqrt( numpy.diag( self.sigma[c] ).max() )
-            self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * v[-1]
-            self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * v[-1]
+            #_pseudo_volume_ = 0.5 * numpy.sqrt( numpy.diag( self.sigma[c] ) )
+            _v_ = v[:,-1].copy()
+            _norm_m_ = numpy.linalg.norm(self.mu[c]) 
+            _norm_v_ = numpy.linalg.norm(_v_) 
+            #_v_ = _norm_m_ * _v_ / _norm_v_ 
+            _v_ = _v_ / _norm_v_ 
+            self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * _v_
+            self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * _v_
         #
         self.sigma.append( numpy.copy( self.sigma[c] ) )
         self.sigma_diag_inv.append( numpy.copy( self.sigma_diag_inv[c] ) )
@@ -531,6 +592,65 @@ class GMM:
         self.acc_sample_counter = numpy.zeros( self.n_components )
         self.log_likelihood = 0.0
         #
+        self.compute_derived_parameters()
+    # ---------------------------------------------------------------------------------            
+
+    # ---------------------------------------------------------------------------------            
+    def clone( self ):
+        #    
+        new_gmm = GMM( n_components=self.n_components, dim=self.dim, covar_type=self.covar_type, min_var=self.min_var )
+        #
+        new_gmm.prioris = self.prioris.copy()
+        for c in range(self.n_components):
+            new_gmm.mu[c][:]               = self.mu[c][:]
+            new_gmm.sigma[c][:,:]          = self.sigma[c][:,:]
+            new_gmm.sigma_diag_inv[c][:]   = self.sigma_diag_inv[c][:]
+            new_gmm.L[c][:,:]              = self.L[c][:,:]
+        #
+        new_gmm.log_prioris      = numpy.log( new_gmm.prioris )
+        new_gmm.log_determinants = numpy.ones( new_gmm.n_components )
+        #
+        new_gmm.acc_posteriors = numpy.zeros( new_gmm.n_components )
+        new_gmm.acc_sample_counter = numpy.zeros( new_gmm.n_components )
+        new_gmm.log_likelihood = 0.0
+        new_gmm.compute_derived_parameters()
+        #
+        return new_gmm
+    # ---------------------------------------------------------------------------------            
+
+    def drop_duplicated_gaussians( self ):
+        #
+        prioris=list()
+        mu=list()
+        sigma=list()
+        L=list()
+        sigma_diag_inv=list()
+        for c in range(self.n_components):
+            min_relative_diff = 1.0e+200
+            for i in range(len(mu)):
+                relative_diff = sum( (self.mu[c] - mu[i])**2 ) / (1.0e-5+sum(self.mu[c]**2))
+                min_relative_diff = min( relative_diff, min_relative_diff )
+            if min_relative_diff >= 1.0e-4:
+                prioris.append( self.prioris[c] )
+                mu.append( self.mu[c] )
+                sigma.append( self.sigma[c] )
+                L.append( self.L[c] )
+                sigma_diag_inv.append( self.sigma_diag_inv[c] )
+        #
+        self.prioris = numpy.array( prioris )
+        self.prioris /= self.prioris.sum()
+        self.mu = mu
+        self.sigma = sigma
+        self.L = L
+        self.sigma_diag_inv = sigma_diag_inv
+        self.n_components = len(mu)
+        #
+        self.log_prioris = numpy.log( self.prioris )
+        self.log_determinants = numpy.ones( self.n_components )
+        #
+        self.acc_posteriors = numpy.zeros( self.n_components )
+        self.acc_sample_counter = numpy.zeros( self.n_components )
+        self.log_likelihood = 0.0
         self.compute_derived_parameters()
     # ---------------------------------------------------------------------------------            
 
@@ -568,6 +688,7 @@ class GMM:
         flag_memory_reserved=False
         f=open( filename, 'rt' )
         c=-1
+        k=-1
         for line in f:
             parts=line.split()
 
@@ -609,10 +730,16 @@ class GMM:
                 self.sigma.append( numpy.zeros( [ self.dim, self.dim ] ) )
                 self.sigma_diag_inv.append( numpy.zeros( self.dim ) )
                 self.L.append( numpy.zeros( [ self.dim, self.dim ] ) )
+                """
                 for k in range(self.dim):
                     line = f.readline()
                     parts=line.split()
                     self.sigma[c][k,:] = [ float(value) for value in parts ]
+                """
+                k=0
+            elif 0 <= k < self.dim:
+                self.sigma[c][k,:] = [ float(value) for value in parts ]
+                k+=1
         #
         f.close()
         self.compute_derived_parameters()

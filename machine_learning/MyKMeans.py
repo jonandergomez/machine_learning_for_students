@@ -87,7 +87,7 @@ class KMeans:
     # --------------------------------------------------------------------------------
     def fit_iteration( self, X ):
 
-        for c in range( self.n_clusters ):
+        for c in range(len(self.cluster_centers_)):
             samples_in_cluster = X[ self.cluster_pred == c ]
             if len(samples_in_cluster) > 0 :
                 self.cluster_centers_[c,:] = numpy.mean( samples_in_cluster, axis=0 )
@@ -131,6 +131,15 @@ class KMeans:
             new_codebook[2*i+1,:] = self.cluster_centers_[i] - distortion
         self.cluster_centers_ = new_codebook
     # --------------------------------------------------------------------------------
+    def drop_empty_clusters( self, X ):
+        y_pred = self.predict(X)
+        centroids=list()
+        for c in range(len(self.cluster_centers_)):
+            if sum(y_pred == c) > 0:
+                centroids.append( self.cluster_centers_[c].copy() )
+        self.cluster_centers_ = numpy.array( centroids )                        
+        self.n_clusters = len(self.cluster_centers_)
+    # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
     def original_k_means( self, X, K=None ):
@@ -148,6 +157,8 @@ class KMeans:
             counters[k] += 1
             # Codebook update
             codebook[k] = ((codebook[k] * (counters[k]-1)) + X[n]) / counters[k]
+            # alpha = 1.0e-6
+            #codebook[k] = codebook[k] * (1-alpha) + X[n] * alpha
         #
         self.n_clusters = K
         self.cluster_centers_ = codebook
@@ -166,8 +177,13 @@ class KMeans:
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
+    def distances( self, X ):
+        return metrics.pairwise.euclidean_distances( X, self.cluster_centers_ )
+    # --------------------------------------------------------------------------------
+
+    # --------------------------------------------------------------------------------
     def improvement( self ):
-        return abs( (self.oldJ - self.J) / self.J )
+        return abs( (self.oldJ - self.J) / (abs(self.J)+10e-5) )
         
     # --------------------------------------------------------------------------------
 

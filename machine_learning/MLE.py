@@ -41,14 +41,6 @@ class MLE:
         - samples must be an RDD
     """
 # ---------------------------------------------------------------------------------            
-    def fit_with_spark( self, spark_context=None, samples=None, max_components=None, epsilon=1.0e-5 ):
-        
-        if spark_context is not None:
-            self.fit_with_spark( spark_context=spark_context, samples=samples, max_components=max_components, epsilon=epsilon )
-        else:
-            self.fit_standalone( samples=samples, max_components=max_components, epsilon=epsilon )
-# ---------------------------------------------------------------------------------            
-
 
 
 # ---------------------------------------------------------------------------------            
@@ -131,35 +123,15 @@ class MLE:
 
         log_file = open( self.log_dir+"/OUT", 'a' )
 
+        old_gmm = self.gmm.clone()
+
         logL=0.0
         while self.gmm.n_components <= max_components:
             logL = self.fit( samples=samples, epsilon=epsilon, batch_size=batch_size, log_file=log_file )
-            """
-            iteration=1
-            iterations_after_epsilon_reached=10
-            relative_improvement = 1.0
-            #
-            log_file.write( 'Starting MLE for %d components\n' %  self.gmm.n_components )
-            log_file.flush()
-            #
-            while iterations_after_epsilon_reached > 0  and  iteration <= self.max_iterations:
-                #
-                old_logL=logL
-                #
-                logL = self.standalone_epoch( samples, batch_size=batch_size )
-                aic,bic = self.gmm.compute_AIC_and_BIC( logL * len(samples) )
-                #
-                relative_improvement = abs( (logL-old_logL) / logL )
-                log_file.write( "iteration %5d  logL = %e  delta_logL = %e  %e  %e\n" % (iteration, logL, relative_improvement, aic, bic) )
-                log_file.flush()
-                #
-                iteration=iteration+1
-                if relative_improvement < epsilon: iterations_after_epsilon_reached -= 1
-            #
-            """
             aic,bic = self.gmm.compute_AIC_and_BIC( logL * len(samples) )
             log_file.write( "n_components %5d  logL = %e  aic %e  bic %e \n" % (self.gmm.n_components, logL, aic, bic) )
             log_file.flush()
+            old_gmm = self.gmm.clone()
             #
             """
             self.gmm.save_to_text( self.models_dir+'/gmm' ) NO NEEDED IF USING self.fit() 
@@ -170,6 +142,8 @@ class MLE:
         log_file.write( "MLE task completed when %d components where execeeded with %d\n" % (max_components, self.gmm.n_components) )
         log_file.flush()
         log_file.close()
+        self.gmm = old_gmm
+        return old_gmm
 # ---------------------------------------------------------------------------------            
 
 # ---------------------------------------------------------------------------------            
@@ -208,19 +182,22 @@ class MLE:
                 old_logL=logL
                 logL = _temp_gmm.log_likelihood / num_samples
                 #
-                relative_improvement = abs( (logL-old_logL) / logL )
+                relative_improvement = (old_logL-logL) / logL
                 self.gmm.update_parameters( _temp_gmm )
                 aic,bic = self.gmm.compute_AIC_and_BIC( logL * num_samples )
                 log_file.write( "iteration %5d  logL = %e  delta_logL = %e   %e  %e\n" % (iteration, logL, relative_improvement, aic, bic) )
                 log_file.flush()
                 iteration=iteration+1
-                if relative_improvement < epsilon: iterations_after_epsilon_reached -= 1
+                if abs(relative_improvement) < epsilon: iterations_after_epsilon_reached -= 1
+            #
+            self.gmm.purge( log_file=log_file )
             #
             aic,bic = self.gmm.compute_AIC_and_BIC( logL * num_samples )
             log_file.write( "n_components %5d  logL = %e  aic %e  bic %e \n" % (self.gmm.n_components, logL, aic, bic) )
             log_file.flush()
             self.gmm.save_to_text( self.models_dir+'/gmm' )
             self.gmm.split( log_file )
+            self.gmm.save_to_text( self.models_dir+'/gmm' )
         # ---------------------------------------------------------------------------
         log_file.write( "MLE task completed when %d components where execeeded with %d\n" % (max_components, self.gmm.n_components) )
         log_file.flush()

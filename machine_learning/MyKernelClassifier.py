@@ -52,7 +52,7 @@ class MyKernelClassifier:
     # ------------------------------------------------------------------------------
     def predict( self, X ):
 
-        Y = numpy.zeros( len(X) )
+        Y = numpy.zeros( len(X), dtype=type(self.targets[0]) )
         best_log_dens = numpy.zeros( len(X) )
 
         for k in range(self.num_classes):

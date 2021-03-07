@@ -22,6 +22,7 @@ from .MyKernelClassifier import MyKernelClassifier
 from .MyKMeans import KMeans
 from .MyGaussian import MyGaussian
 from .LinearDiscriminant import LinearDiscriminant
+from .gmm_classifier import GMM_classifier
 
 
-__all__ = [ 'KMeans', 'GMM', 'MLE', 'MyKernel', 'MyKernelClassifier', 'MyGausian', 'LinearDiscriminant', 'generate_datasets' ]
+__all__ = [ 'KMeans', 'GMM', 'MLE', 'GMM_classifier', 'MyKernel', 'MyKernelClassifier', 'MyGausian', 'LinearDiscriminant', 'generate_datasets' ]

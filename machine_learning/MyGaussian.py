@@ -31,7 +31,7 @@ class MyGaussian:
 
     allowed_covar_types = [ 'full', 'diag', 'tied', 'tied_diag' ]
     
-    def __init__( self, covar_type='full' ):
+    def __init__( self, covar_type='full', min_var=1.0e-5 ):
         #
         if covar_type not in MyGaussian.allowed_covar_types:
             raise Exception( 'Wrong covar type provided: %s ' % covar_type )
@@ -41,6 +41,7 @@ class MyGaussian:
         self.log_priori=None
         self.mu=None
         self.sigma=None
+        self.min_var=min_var
         self.L=None
         self.dim=0
         self.targets=None
@@ -71,11 +72,13 @@ class MyGaussian:
         
         for i in range(len(self.targets)):
             target=self.targets[i]
-            subset = X[ [Y==target] ]
+            subset = X[ Y == target ]
             self.mu[i] = subset.mean(axis=0)
             #
             if self.covar_type in ['full', 'diag']:
                 self.sigma[i] = numpy.cov( subset.T )
+                for k in range(len(self.sigma[i])):
+                    self.sigma[i,k,k] = max( self.sigma[i,k,k], self.min_var )
                 if self.covar_type == 'diag':
                     self.sigma[i] = numpy.diag( numpy.diag( self.sigma[i] ) )
                     self.L[i] = numpy.sqrt( self.sigma[i] )
@@ -93,25 +96,25 @@ class MyGaussian:
     # ------------------------------------------------------------------------------
     def mahalanobis( self, x ):
         dist = numpy.zeros( self.num_classes )
-        for i in range(self.num_classes):
-            d = x - self.mu[i]
-            v = numpy.linalg.solve( self.L[i], d )
-            dist[i] = numpy.dot( v, v )
+        if self.covar_type == 'diag':
+            for i in range(self.num_classes):
+                d = x - self.mu[i]
+                dist[i] = ( (d*d)/numpy.diag(self.sigma[i]) ).sum()
+        else:
+            for i in range(self.num_classes):
+                d = x - self.mu[i]
+                v = numpy.linalg.solve( self.L[i], d )
+                dist[i] = numpy.dot( v, v )
         return dist
     # ------------------------------------------------------------------------------
 
 
     # ------------------------------------------------------------------------------
     def predict( self, X ):
-        Y = numpy.zeros( len(X) )
+        Y = numpy.zeros( len(X), dtype=type(self.targets[0]) )
         for n in range(len(X)):
             dists = self.mahalanobis(X[n])
-            max_log_prob=-numpy.inf
-            Y[n]=0
-            for i in range(self.num_classes):
-                log_prob = self.log_priori[i] - 0.5*( dists[i] + self.log_determinants[i] + self.log_2_pi )
-                if log_prob > max_log_prob :
-                    max_log_prob = log_prob
-                    Y[n] = self.targets[i]
+            log_prob = self.log_priori - 0.5*( dists + self.log_determinants + self.log_2_pi )
+            Y[n] = self.targets[ numpy.argmax(log_prob) ]
         return Y
     # ------------------------------------------------------------------------------
