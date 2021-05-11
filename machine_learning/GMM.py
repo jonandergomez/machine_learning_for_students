@@ -20,11 +20,11 @@ class GMM:
                  dim: two by default
     """
 
-    covar_types = [ 'diagonal', 'full', 'tied', 'tied_diagonal', 'spherical' ]
-    covar_diagonal_types = [ 'diagonal', 'tied_diagonal', 'spherical' ]
-    covar_tied_types = [ 'tied', 'tied_diagonal' ]
+    covar_types = ['diagonal', 'full', 'tied', 'tied_diagonal', 'spherical']
+    covar_diagonal_types = ['diagonal', 'tied_diagonal', 'spherical']
+    covar_tied_types = ['tied', 'tied_diagonal']
 
-    def __init__( self, n_components=1, dim=2, covar_type='diagonal', min_var=1.0e-5, _for_accumulating=False ):
+    def __init__(self, n_components = 1, dim = 2, covar_type = 'diagonal', min_var = 1.0e-5, _for_accumulating = False):
         
         if covar_type not in GMM.covar_types:
             raise Exception( 'GMM(): incorrect covar type: %s' % covar_type )
@@ -274,10 +274,12 @@ class GMM:
         _max_log_density = _log_densities.max(axis=0)
         _densities = numpy.exp( _log_densities - _max_log_density )
         _log_likelihood = numpy.log( _densities.sum(axis=0) ) + _max_log_density
+        '''
         if _log_likelihood.any() > 0.0:
-            print( _log_likelihood )
-            print( _densities.sum(axis=0) )
-        return _densities / _densities.sum(axis=0), _log_likelihood
+            print("posteriors_batch()", _log_likelihood)
+            print("posteriors_batch()", _densities.sum(axis = 0))
+        '''
+        return _densities / _densities.sum(axis = 0), _log_likelihood
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
@@ -426,7 +428,7 @@ class GMM:
             #
         elif self.covar_type == 'tied_diagonal' :
             # Free parameters are the means, the a priori probabilities and
-            # only one time of the elements of the diagonal covariance matrix
+            # only one time the elements of the diagonal covariance matrix
             m = self.n_components * ( self.dim + 1 ) + self.dim
             #
         elif self.covar_type == 'diagonal' :
