@@ -418,7 +418,6 @@ class GMM:
     def compute_AIC_and_BIC( self, logL ):
         #
         num_samples = self.acc_sample_counter.sum()
-        den = num_samples
         logN = numpy.log( max( 1.0, num_samples ) )
         #
         m = 0

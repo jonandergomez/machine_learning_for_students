@@ -61,6 +61,7 @@ class MLE:
         #print(f'MLE.standalone_epoch(): working with {n_proc} threads', flush = True)
 
         if type(samples) == numpy.ndarray:
+            '''
             #
             params = [(i, batch_size) for i in range(0, len(samples), batch_size)]
             #
@@ -72,13 +73,12 @@ class MLE:
 
             #print(f'MLE.standalone_epoch(): logL of temp gmm is {_temp_gmm.log_likelihood}', flush = True)
             '''
-            counter=0
+            counter = 0
             while counter < len(samples):
-                _temp_gmm.accumulate_sample_batch( samples[counter:counter+batch_size].transpose(), self.gmm )
+                _temp_gmm.accumulate_sample_batch(samples[counter:counter+batch_size].transpose(), self.gmm)
                 counter += batch_size
                 #sys.stdout.write( "accumulated sample %d/%d at iteration %d at %s\n" % (counter, len(samples), iteration, time.asctime() ) )
                 #sys.stdout.flush()
-            '''
             #
         elif type(samples) == list:
             counter=0
