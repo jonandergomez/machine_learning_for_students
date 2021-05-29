@@ -523,10 +523,25 @@ class GMM:
                 """
                     If the co-variance matrix is share among all the Gaussians
                     only the criterion based on the number of samples is used
-                    for split clusters.
+                    to split clusters.
                 """
                 self.split_gaussian( nsg[0][1] )
                 _counter+=1
+
+            elif abs(nsg[0][0] - nsg[-1][0]) < 1.0e-3:
+                """
+                    If the number of samples per Gaussian is not informed, then,
+                    only the criterion based on the trace of the determinant is used
+                    to split clusters.
+                """
+                self.split_gaussian(tsg[0][1])
+                _counter += 1
+                for c in range(1, len(tsg) //2):
+                    if (tsg[c - 1][0] - tsg[c][0]) > (tsg[c][0] - tsg[c + 1][0]):
+                        break
+                    self.split_gaussian(tsg[c][1])
+                    _counter += 1
+
             else:
                 """
                     Splits those Gaussians which are in the first half of both lists.
