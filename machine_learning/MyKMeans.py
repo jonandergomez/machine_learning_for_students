@@ -1,7 +1,7 @@
 """
     Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://www.dsic.upv.es/~jon)
     Version: 4.0
-    Date: November 2021
+    Date: May 2021
     Universitat Politecnica de Valencia
     Technical University of Valencia TU.VLC
 
@@ -87,6 +87,7 @@ class KMeans:
         else:
             raise Exception('Wrong modality ' + self.modality)
         #
+        self.cluster_pred = None
         return self
     # --------------------------------------------------------------------------------
 
@@ -187,10 +188,10 @@ class KMeans:
         self.n_clusters = len(self.cluster_centers_)
     # --------------------------------------------------------------------------------
     def split(self, distortion):
-        new_codebook = numpy.zeros([2*len(self.cluster_centers_), len(distortion)])
+        new_codebook = numpy.zeros([2 * len(self.cluster_centers_), len(distortion)])
         for i in range(len(self.cluster_centers_)):
-            new_codebook[2*i,  :] = self.cluster_centers_[i] + distortion
-            new_codebook[2*i+1,:] = self.cluster_centers_[i] - distortion
+            new_codebook[2 * i    , :] = self.cluster_centers_[i] + distortion
+            new_codebook[2 * i + 1, :] = self.cluster_centers_[i] - distortion
         self.cluster_centers_ = new_codebook
     # --------------------------------------------------------------------------------
     def drop_empty_clusters(self, X):
@@ -204,27 +205,47 @@ class KMeans:
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
-    def original_k_means(self, X, K=None):
-        #
-        if K is None : raise Exception('The number of desired clusters must be specified!')
-        #
-        codebook = numpy.copy(X[:K])
-        counters = numpy.ones(K)
-        for n in range(K,len(X)):
+    def original_k_means(self, X):
+        self.original_k_means_init(X)
+    # --------------------------------------------------------------------------------
+    def original_k_means_init(self, X):
+        if type(X) not in [numpy.ndarray, list]:
+            raise Exception('X must be a numpy array or a list!')
+        dim = None
+        if type(X) is list:
+            if type(X[0]) is not numpy.ndarray:
+                raise Exception('Elements in X must numpy arrays!')
+            dim = X[0].shape[0]
+        else:
+            dim = X.shape[1]
+
+        if len(X) < self.n_clusters:
+            raise Exception('Initialisation must be done with a minimum number of samples/vectors equal to the number of clusters!')
+
+        K = self.n_clusters
+        self.counters = numpy.ones(self.n_clusters)
+        #self.cluster_centers_ = numpy.zeros([self.n_clusters, dim])
+        #for i in range(K):
+        #    self.cluster_centers_[i, :] = X[i, :]
+        self.cluster_centers_ = numpy.copy(X[:K])
+
+        self.original_k_means_iteration(X[K:])
+    # --------------------------------------------------------------------------------
+    def original_k_means_iteration(self, X):
+        for n in range(len(X)):
             # Classification
-            _diffs_ = codebook - X[n]
+            _diffs_ = self.cluster_centers_ - X[n]
             _distances_ = (_diffs_ * _diffs_).sum(axis = 1)
             k = _distances_.argmin()
             # Partition update
-            counters[k] += 1
+            self.counters[k] += 1
             # Codebook update
-            codebook[k] = ((codebook[k] * (counters[k] - 1)) + X[n]) / counters[k]
+            self.cluster_centers_[k] = ((self.cluster_centers_[k] * (self.counters[k] - 1)) + X[n]) / self.counters[k]
+            #
+            if sum(numpy.isnan(self.cluster_centers_[k].ravel())) > 0:
+                raise Exception(f'FATAL ERROR: update of cluster {k} by sample {X[n]} generates NaN')
             # alpha = 1.0e-6
-            #codebook[k] = codebook[k] * (1-alpha) + X[n] * alpha
-        #
-        self.n_clusters = K
-        self.cluster_centers_ = codebook
-    # --------------------------------------------------------------------------------
+            #self.cluster_centers_[k] = self.cluster_centers_[k] * (1 - alpha) + X[n] * alpha
 
     # --------------------------------------------------------------------------------
     def predict(self, X):
@@ -250,7 +271,6 @@ class KMeans:
     # --------------------------------------------------------------------------------
     def improvement(self):
         return abs((self.oldJ - self.J) / (abs(self.J) + 10e-5))
-
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
@@ -281,7 +301,7 @@ class KMeans:
             f.close()
     # -------------------------------------------------------------------------
 
-def load(filename=None):
+def kmeans_load(filename=None):
     if filename is None : raise Exception('Impossible to load a codebook without the filename!')
     model = None
     if os.path.exists(filename) and os.path.isfile(filename):
