@@ -175,7 +175,16 @@ class HMM:
 
     def initialize_gmm_from_random_samples( self, samples ):
         for s in self.S:
-            s.gmm.initialize_from( samples )
+            s.gmm.initialize_from(samples)
+    # --------------------------------------------------------------------------------------------------------------------------------------------
+    def initialize_gmm_from_kmeans(self, samples):
+        from machine_learning import KMeans
+        kmeans = KMeans(n_clusters = len(self.S), init = 'Katsavounidis', verbosity = 1)
+        print("HMM.initializegmm_from_kmeans() begins the fit", flush = True)
+        kmeans.fit(numpy.vstack(samples))
+        print("HMM.initializegmm_from_kmeans() ends the fit", flush = True)
+        for k in range(len(self.S)):
+            self.S[k].gmm.initialize_from_centroids(kmeans.cluster_centers_[k])
     # --------------------------------------------------------------------------------------------------------------------------------------------
 
     def save( self, f, save_states_and_transitions=False ):
@@ -451,6 +460,6 @@ class HMM:
         return delta[-1,_best_], seq
     # --------------------------------------------------------------------------------------------------------------------------------------------
 
-    def split_gmm( self ):
-        for s in self.S: s.split_gmm()
+    def split_gmm(self, force = False):
+        for s in self.S: s.split_gmm(force = force)
     # --------------------------------------------------------------------------------------------------------------------------------------------

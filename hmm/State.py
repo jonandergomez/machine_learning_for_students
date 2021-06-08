@@ -79,9 +79,9 @@ class State:
         else:
             self.gmm_accumulator.accumulate_sample( sample, self.gmm, weight )
 
-    def split_gmm( self ):
+    def split_gmm(self, force = False):
         if self.B is None and self.gmm is not None:
-            self.gmm.split()
+            self.gmm.split(force = force)
             self.num_mixtures = self.gmm.n_components
             self.reset_accumulators()
 
