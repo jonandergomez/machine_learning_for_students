@@ -1,5 +1,5 @@
 """
-    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://www.dsic.upv.es/~jon)
+    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
     Version: 4.0
     Date: May 2021
     Universitat Politecnica de Valencia
@@ -36,11 +36,11 @@ class KMeans:
     """
 
     # --------------------------------------------------------------------------------
-    def __init__(self,  n_clusters=2,
-                        number_of_initializations=1,
-                        init='random',
-                        max_iter=1000,
-                        modality='Lloyd',
+    def __init__(self,  n_clusters = 2,
+                        number_of_initializations = 1,
+                        init = 'random',
+                        max_iter = 1000,
+                        modality = 'Lloyd',
                         verbosity = 0):
         self.max_iter = max_iter
         self.number_of_initializations = number_of_initializations
@@ -71,7 +71,7 @@ class KMeans:
                 print('ERROR: init method not specified!')
                 sys.exit(1)
             #
-            if self.modality ==  'Lloyd':
+            if self.modality == 'Lloyd':
                 self.lloyd(X)
             else:
                 self.k_mediods(X)
@@ -168,7 +168,7 @@ class KMeans:
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
-    def lbg(self, X, K=None, verbose=0):
+    def lbg(self, X, K = None, verbose = 0):
         #
         if K is None : raise Exception('The number of desired clusters must be specified!')
         #
@@ -295,7 +295,7 @@ class KMeans:
 
 
     # -------------------------------------------------------------------------
-    def save(self, filename=None):
+    def save(self, filename = None):
         if filename is not None:
             with gzip.open(filename, 'wb') as f: pickle.dump(self, f)
             f.close()

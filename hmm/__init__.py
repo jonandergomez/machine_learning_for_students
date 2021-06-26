@@ -1,5 +1,5 @@
 """
-    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://www.dsic.upv.es/~jon)
+    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
     Version: 2.0
     Date: September 2016
     Universitat Politecnica de Valencia
@@ -14,4 +14,4 @@ from .HMM           import HMM
 #from .AcousticModel import AcousticModel
 
 #__all__ = [ 'Utils', 'State', 'HMM', 'AcousticModel' ]
-__all__ = [ 'Transitions', 'State', 'HMM' ]
+__all__ = ['Transitions', 'State', 'HMM']

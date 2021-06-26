@@ -1,5 +1,5 @@
 '''
-    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://www.dsic.upv.es/~jon)
+    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
     Version: 2.0
     Date: January 2021
     Universitat Politecnica de Valencia

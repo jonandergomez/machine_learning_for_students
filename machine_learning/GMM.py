@@ -1,5 +1,5 @@
 """
-    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://www.dsic.upv.es/~jon)
+    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
     Version: 2.0
     Date: October 2016
     Universitat Politecnica de Valencia
@@ -44,9 +44,9 @@ class GMM:
         self.sigma_diag_inv = []
         for c in range(self.n_components):
             self.mu.append(numpy.zeros(dim))
-            self.sigma.append(numpy.zeros([dim, dim]));
-            self.sigma_diag_inv.append(numpy.ones(dim));
-            self.L.append(numpy.zeros([dim, dim]));
+            self.sigma.append(numpy.zeros([dim, dim]))
+            self.sigma_diag_inv.append(numpy.ones(dim))
+            self.L.append(numpy.zeros([dim, dim]))
         #
         self.log_prioris      = numpy.log(self.prioris)
         self.log_determinants = numpy.ones(n_components)
@@ -114,7 +114,7 @@ class GMM:
             other.save_to_text('wrong-gmm')
             raise Exception('GMM.update_parameters(): gaussian %d with zero probability' % self.prioris.argmin())
         #while self.prioris.min() < 1.0e-200:
-        #    other.remove_gaussian( self.prioris.argmin() )
+        #    other.remove_gaussian(self.prioris.argmin())
         #    self.prioris = other.acc_posteriors / other.acc_sample_counter.sum()
         if abs(self.prioris.sum() - 1.0) > 1.0e-5:
             other.save_to_text('wrong-gmm')
@@ -513,7 +513,7 @@ class GMM:
     # ---------------------------------------------------------------------------------            
 
     # ---------------------------------------------------------------------------------            
-    def split(self, log_file=None, force=False):
+    def split(self, log_file = None, force = False):
         if log_file is None: log_file = sys.stdout
         if force or self.n_components < 4:
             max_c = self.n_components
@@ -598,12 +598,12 @@ class GMM:
             v = numpy.sqrt(numpy.diag(self.sigma[c]))
             self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * v
             self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * v
-            #self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * v[:,-1]
-            #self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * v[:,-1]
+            #self.mu[-1][:]  = self.mu[c] + _pseudo_volume_ * v[:, -1]
+            #self.mu[c][:]   = self.mu[c] - _pseudo_volume_ * v[:, -1]
         else:
-            w, v = numpy.linalg.eigh(self.sigma[c])        
+            w, v = numpy.linalg.eigh(self.sigma[c])
             _pseudo_volume_ = 1.0
-            #_pseudo_volume_ = 0.5 * numpy.sqrt( numpy.diag( self.sigma[c] ) )
+            #_pseudo_volume_ = 0.5 * numpy.sqrt(numpy.diag(self.sigma[c]))
             _v_ = v[:, -1].copy()
             _norm_m_ = numpy.linalg.norm(self.mu[c]) 
             _norm_v_ = numpy.linalg.norm(_v_) 
@@ -756,8 +756,8 @@ class GMM:
                 self.mu.append(numpy.array([float(value) for value in parts[1:]]))
 
             elif parts[0] == 'sigma':
-                self.sigma.append( numpy.zeros([self.dim, self.dim ]))
-                self.sigma_diag_inv.append(numpy.zeros( self.dim))
+                self.sigma.append(numpy.zeros([self.dim, self.dim ]))
+                self.sigma_diag_inv.append(numpy.zeros(self.dim))
                 self.L.append( numpy.zeros([self.dim, self.dim ]))
                 """
                 for k in range(self.dim):

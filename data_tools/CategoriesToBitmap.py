@@ -1,5 +1,5 @@
 """
-    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://www.dsic.upv.es/~jon)
+    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
     Version: 1.0
     Date: November 2016
     Universitat Politecnica de Valencia
@@ -16,7 +16,7 @@ import numpy
 
 class CategoriesToBitmap:
 
-    def __init__( self, values=None, subset=None, to_be_excluded=None, mass=0.95, verbose=0 ):
+    def __init__(self, values=None, subset=None, to_be_excluded=None, mass=0.95, verbose=0):
         
         if values is not None:
             pass
@@ -32,7 +32,7 @@ class CategoriesToBitmap:
             for v in _v_:
                 if v not in _d_  and  v not in to_be_excluded:
                     _d_[v] = i
-                    i+=1
+                    i += 1
 
             # Computes an array of counters for all the possible values
             _c_ = numpy.zeros(len(_d_))
@@ -44,10 +44,10 @@ class CategoriesToBitmap:
             _c_ = _c_ / _c_.sum()
             _temp_ = _c_.copy()
             _temp_.sort()
-            i=len(_temp_)
+            i = len(_temp_)
             accum = 0.0
             while i > 0 and accum <= mass :
-                i-=1
+                i -= 1
                 accum += _temp_[i]
             
             threshold = _temp_[i]
@@ -61,13 +61,13 @@ class CategoriesToBitmap:
                 if v in _d_ and _c_[_d_[v]] >= threshold:
                     values.append(v)
         else:
-            raise Exception( "Impossible to create an object of the class CategoriesToBitmap without values or a subset where to compute the values from." );
+            raise Exception("Impossible to create an object of the class CategoriesToBitmap without values or a subset where to compute the values from.")
 
-        self.values=dict()
-        i=0
+        self.values = dict()
+        i = 0
         for value in values:
             self.values[value] = i
-            i+=1
+            i += 1
     # -----------------------------------------------------                
 
     def __len__(self): return len(self.values)
@@ -75,21 +75,21 @@ class CategoriesToBitmap:
     def bitmap(self,value):
         x = numpy.zeros(len(self))
         if value in self.values:
-            x[ self.values[value] ] = 1.0
+            x[self.values[value]] = 1.0
         return x
 
 
 
 if __name__ == '__main__':
     
-    B = [ 'AA', 'AA', 'AA', 'AA', 'BB', 'BB', 'BB', 'CC', 'CC', 'DD' ]
+    B = ['AA', 'AA', 'AA', 'AA', 'BB', 'BB', 'BB', 'CC', 'CC', 'DD']
     X = []
     for i in range(20):
-        X += [ B[ numpy.random.randint(len(B)) ] ]
-    X.append( 'EE' )
-    ctb = CategoriesToBitmap( subset=X, mass=0.90 )
+        X += [B[ numpy.random.randint(len(B))]]
+    X.append('EE')
+    ctb = CategoriesToBitmap(subset = X, mass = 0.90)
 
-    B.append( 'EE' )
+    B.append('EE')
 
     for x in numpy.unique(B):
-        print( x , ctb.bitmap(x) )
+        print(x , ctb.bitmap(x))

@@ -1,5 +1,5 @@
 """
-    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://www.dsic.upv.es/~jon)
+    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
     Version: 2.0
     Date: October 2016
     Universitat Politecnica de Valencia
@@ -29,92 +29,92 @@ class MyGaussian:
     of 'numpy' for more details.
     """
 
-    allowed_covar_types = [ 'full', 'diag', 'tied', 'tied_diag' ]
+    allowed_covar_types = ['full', 'diag', 'tied', 'tied_diag']
     
-    def __init__( self, covar_type='full', min_var=1.0e-5 ):
+    def __init__(self, covar_type = 'full', min_var = 1.0e-5):
         #
         if covar_type not in MyGaussian.allowed_covar_types:
-            raise Exception( 'Wrong covar type provided: %s ' % covar_type )
+            raise Exception('Wrong covar type provided: %s ' % covar_type)
         #
         self.covar_type = covar_type
-        self.num_classes=0
-        self.log_priori=None
-        self.mu=None
-        self.sigma=None
-        self.min_var=min_var
-        self.L=None
-        self.dim=0
-        self.targets=None
-        self.log_2_pi = numpy.log( 2 * numpy.pi )
+        self.num_classes = 0
+        self.log_priori = None
+        self.mu = None
+        self.sigma = None
+        self.min_var = min_var
+        self.L = None
+        self.dim = 0
+        self.targets = None
+        self.log_2_pi = numpy.log(2 * numpy.pi)
 
 
     # ------------------------------------------------------------------------------
-    def fit( self, X, Y ):
-        self.dim=X.shape[1]
+    def fit(self, X, Y):
+        self.dim = X.shape[1]
         self.targets = numpy.unique(Y)
         self.num_classes = len(self.targets)
-        self.log_priori = numpy.zeros( self.num_classes )
-        self.mu = numpy.zeros( [ self.num_classes, self.dim ] )
-        self.sigma = numpy.zeros( [ self.num_classes, self.dim, self.dim ] )
-        self.L = numpy.zeros( [ self.num_classes, self.dim, self.dim ] )
-        self.log_determinants = numpy.zeros( self.num_classes )
+        self.log_priori = numpy.zeros(self.num_classes)
+        self.mu = numpy.zeros([self.num_classes, self.dim])
+        self.sigma = numpy.zeros([self.num_classes, self.dim, self.dim])
+        self.L = numpy.zeros([self.num_classes, self.dim, self.dim])
+        self.log_determinants = numpy.zeros(self.num_classes)
 
-        global_sigma = numpy.identity( self.dim )
-        global_L = numpy.identity( self.dim )
-        if self.covar_type in [ 'tied', 'tied_diag' ]:
-            global_mu = X.mean(axis=0)
-            global_sigma = numpy.cov( X.T )
+        global_sigma = numpy.identity(self.dim)
+        global_L = numpy.identity(self.dim)
+        if self.covar_type in ['tied', 'tied_diag']:
+            global_mu = X.mean(axis = 0)
+            global_sigma = numpy.cov(X.T)
             if self.covar_type == 'tied_diag':
-                global_sigma = numpy.diag( numpy.diag( global_sigma ) )
-                global_L = numpy.sqrt( global_sigma )
+                global_sigma = numpy.diag(numpy.diag(global_sigma))
+                global_L = numpy.sqrt(global_sigma)
             else:
-                global_L = numpy.linalg.cholesky( global_sigma )
+                global_L = numpy.linalg.cholesky(global_sigma)
         
         for i in range(len(self.targets)):
             target=self.targets[i]
-            subset = X[ Y == target ]
-            self.mu[i] = subset.mean(axis=0)
+            subset = X[Y == target]
+            self.mu[i] = subset.mean(axis = 0)
             #
             if self.covar_type in ['full', 'diag']:
-                self.sigma[i] = numpy.cov( subset.T )
+                self.sigma[i] = numpy.cov(subset.T)
                 for k in range(len(self.sigma[i])):
-                    self.sigma[i,k,k] = max( self.sigma[i,k,k], self.min_var )
+                    self.sigma[i, k, k] = max(self.sigma[i, k, k], self.min_var)
                 if self.covar_type == 'diag':
-                    self.sigma[i] = numpy.diag( numpy.diag( self.sigma[i] ) )
-                    self.L[i] = numpy.sqrt( self.sigma[i] )
+                    self.sigma[i] = numpy.diag(numpy.diag(self.sigma[i]))
+                    self.L[i] = numpy.sqrt(self.sigma[i])
                 else:
-                    self.L[i] = numpy.linalg.cholesky( self.sigma[i] )
+                    self.L[i] = numpy.linalg.cholesky(self.sigma[i])
             else:
                 self.sigma[i] = global_sigma
                 self.L[i] = global_L
             #
-            self.log_determinants[i] = 2 * numpy.log( numpy.diag( self.L[i] ) ).sum()
+            self.log_determinants[i] = 2 * numpy.log(numpy.diag(self.L[i])).sum()
             #
-            self.log_priori[i] = numpy.log( len(subset) ) - numpy.log( len(X) )
+            self.log_priori[i] = numpy.log(len(subset)) - numpy.log(len(X))
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
-    def mahalanobis( self, x ):
-        dist = numpy.zeros( self.num_classes )
+    def mahalanobis(self, x):
+        dist = numpy.zeros(self.num_classes)
         if self.covar_type == 'diag':
             for i in range(self.num_classes):
                 d = x - self.mu[i]
-                dist[i] = ( (d*d)/numpy.diag(self.sigma[i]) ).sum()
+                dist[i] = ((d * d) / numpy.diag(self.sigma[i])).sum()
         else:
             for i in range(self.num_classes):
                 d = x - self.mu[i]
-                v = numpy.linalg.solve( self.L[i], d )
-                dist[i] = numpy.dot( v, v )
+                v = numpy.linalg.solve(self.L[i], d)
+                dist[i] = numpy.dot(v, v)
         return dist
     # ------------------------------------------------------------------------------
 
 
     # ------------------------------------------------------------------------------
-    def predict( self, X ):
-        Y = numpy.zeros( len(X), dtype=type(self.targets[0]) )
+    def predict(self, X):
+        Y = numpy.zeros(len(X), dtype = type(self.targets[0]))
         for n in range(len(X)):
             dists = self.mahalanobis(X[n])
-            log_prob = self.log_priori - 0.5*( dists + self.log_determinants + self.log_2_pi )
-            Y[n] = self.targets[ numpy.argmax(log_prob) ]
+            log_prob = self.log_priori - 0.5 * (dists + self.log_determinants + self.log_2_pi)
+            Y[n] = self.targets[numpy.argmax(log_prob)]
         return Y
     # ------------------------------------------------------------------------------

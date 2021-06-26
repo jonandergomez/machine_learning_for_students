@@ -1,5 +1,5 @@
 """
-    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://www.dsic.upv.es/~jon)
+    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
     Version: 2.0
     Date: June 2016
     Universitat Politecnica de Valencia
@@ -25,4 +25,4 @@ from .LinearDiscriminant import LinearDiscriminant
 from .gmm_classifier import GMM_classifier
 
 
-__all__ = [ 'KMeans', 'kmeans_load', 'GMM', 'MLE', 'GMM_classifier', 'MyKernel', 'MyKernelClassifier', 'MyGausian', 'LinearDiscriminant', 'generate_datasets' ]
+__all__ = ['KMeans', 'kmeans_load', 'GMM', 'MLE', 'GMM_classifier', 'MyKernel', 'MyKernelClassifier', 'MyGausian', 'LinearDiscriminant', 'generate_datasets']

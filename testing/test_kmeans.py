@@ -1,3 +1,14 @@
+"""
+    Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
+    Version: 1.0
+    Date: May 2021
+    Universitat Politecnica de Valencia
+    Technical University of Valencia TU.VLC
+
+    Testing K-Means
+
+"""
+
 import os
 import sys
 import numpy
