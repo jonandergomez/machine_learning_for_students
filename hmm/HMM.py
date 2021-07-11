@@ -18,7 +18,7 @@ from .Transitions import Transitions
 class HMM:
     """
         An HMM is characterized by the following attributes:
-            
+
             S: the set of states
 
                states must be able to compute b(s,o_k), the probability of emitting
@@ -224,7 +224,7 @@ class HMM:
 
     def log_add(log_probs):
         _max_ = log_probs.max()
-        _sum_ = numpy.log(numpy.exp(log_probs - _max_).sum() ) + _max_
+        _sum_ = numpy.log(numpy.exp(log_probs - _max_).sum()) + _max_
         return _sum_
     # --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -252,9 +252,9 @@ class HMM:
                 #
                 alpha[t, j] = HMM.log_add(alpha[t - 1, :] + self.A.log_transitions[:, j]) + B[j, t]
 
-        return alpha, B, HMM.log_add( alpha[-1, :])
+        return alpha, B, HMM.log_add(alpha[-1, :])
     # --------------------------------------------------------------------------------------------------------------------------------------------
-    
+
     def backward(self, O, B, final_probs = None, terminal_nodes = None):
         """
             Version for training a unique HMM, not valid for the concatenation of several HMM as used in ASR or HTR
@@ -278,7 +278,7 @@ class HMM:
                 # beta[t, i] = sum_j(A[i, j] * B[j, O[t + 1]) * beta[t + 1, j])
                 #
                 beta[t, i] = HMM.log_add(self.A.log_transitions[i, :] + B[:, t + 1] + beta[t + 1, :])
-            t-=1
+            t -= 1
 
         return beta
     # --------------------------------------------------------------------------------------------------------------------------------------------
@@ -316,11 +316,11 @@ class HMM:
     # --------------------------------------------------------------------------------------------------------------------------------------------
 
     def baum_welch_from_a_list(self, list_of_observations, do_reset = True, verbose = True):
-        
+
         if do_reset: self.baum_welch_reset()
 
         if verbose: sys.stderr.write('Training samples %6d: \n' % len(list_of_observations))
-        counter=0
+        counter = 0
         for O in list_of_observations:
             self.baum_welch(O)
             counter += 1
@@ -355,12 +355,12 @@ class HMM:
         # UPDATE OF THE STATE-TRANSITION PROBABILITIES
         if len(O) > 1:
             for i in range(len(self)):
-                _log_den_ = HMM.log_add( gamma[ : -1, i] ) # sum(t = 1..T-1, gamma[t, i])
+                _log_den_ = HMM.log_add(gamma[ : -1, i]) # sum(t = 1..T-1, gamma[t, i])
                 for j in range(len(self)):
-                    gamma_tr = numpy.zeros( len(O) - 1)
+                    gamma_tr = numpy.zeros(len(O) - 1)
                     for t in range(gamma_tr.shape[0]):
-                        gamma_tr[t] = alpha[t,i] + self.A.get_log_prob(i, j) + B[j, t + 1] + beta[t + 1, j] - _Z_
-                    _weight_ = numpy.exp( HMM.log_add(gamma_tr[:]) - _log_den_)
+                        gamma_tr[t] = alpha[t, i] + self.A.get_log_prob(i, j) + B[j, t + 1] + beta[t + 1, j] - _Z_
+                    _weight_ = numpy.exp(HMM.log_add(gamma_tr[:]) - _log_den_)
                     self.A.accumulate_transition(i, j, value = _weight_) # This line is candidate to be modified for accumulating logarithms
         #
         # UDPDATE OF THE STATE STARTING PROBABILITIES
@@ -378,13 +378,13 @@ class HMM:
                 for k in numpy.unique(O): # range(self.num_symbols)
                     _log_num_ = HMM.log_add(gamma[O == k, i])
                     _weight_ = numpy.exp(_log_num_ - _log_den_)
-                    self.S[i].accumulate_sample(k, _weight_, numpy.exp(_log_num_), _den_) # This line is candidate to be modified for accumulating logarithms 
+                    self.S[i].accumulate_sample(k, _weight_, numpy.exp(_log_num_), _den_) # This line is candidate to be modified for accumulating logarithms
                 #
         elif self.modality in ['Continuous']:
             #
             for j in range(len(self)):
                 #
-                _log_denominator_ = HMM.log_add(gamma[:,j]) # sum(t = 1..T, gamma[t, i])
+                _log_denominator_ = HMM.log_add(gamma[:, j]) # sum(t = 1..T, gamma[t, i])
                 _denominator_ = numpy.exp(_log_denominator_)
                 #
                 _log_densities_ = numpy.zeros([len(O), self.S[j].gmm.n_components])
@@ -398,7 +398,7 @@ class HMM:
                     for t in range(1, len(O)):
                         _temp_ = numpy.zeros(len(self))
                         for i in range(len(self)): # For all the states in the HMM
-                            _temp_[i] = alpha[t - 1,i] + self.A.get_log_prob(i, j) + _log_densities_[t, k] + beta[t, j]
+                            _temp_[i] = alpha[t - 1, i] + self.A.get_log_prob(i, j) + _log_densities_[t, k] + beta[t, j]
                         log_xi[t] = HMM.log_add(_temp_) # _xi_t_j_k_  for all t > 0
                     #
                     log_xi -= _Z_ # Dividing by P(O|lambda)
@@ -445,7 +445,7 @@ class HMM:
                 delta[t, j] = delta[t - 1, _from_] + self.S[j].b(O[t])
                 #
             #
-        if self.A.force_to_one_terminal_state:        
+        if self.A.force_to_one_terminal_state:
             _best_ = len(delta[-1]) - 1 # According to Transitions.py the terminal state is the last one
         else:
             _best_ = numpy.argmax(delta[-1, :])
