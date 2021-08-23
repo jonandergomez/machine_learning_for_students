@@ -82,7 +82,7 @@ class KMeans:
             #
         elif self.modality in ['k-Means', 'original-k-Means']:
             #
-            self.original_k_means(X, K = self.n_clusters)
+            self.original_k_means(X)
             #
         else:
             raise Exception('Wrong modality ' + self.modality)
