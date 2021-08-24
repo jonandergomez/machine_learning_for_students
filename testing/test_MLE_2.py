@@ -142,7 +142,7 @@ if __name__ == "__main__":
 
         # Repartition if necessary
         if samples.getNumPartitions() < slices:
-            samples = samples.repartition( slices)
+            samples = samples.repartition(slices)
             print("rdd repartitioned to %d partitions" % samples.getNumPartitions())
 
         # Shows an example of each element in the temporary RDD of tuples [key, block of samples]
