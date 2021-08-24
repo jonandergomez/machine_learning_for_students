@@ -51,6 +51,7 @@ class KMeans:
         self.J = 9.9e+300
         self.oldJ = 9.9e+300
         self.modality = modality
+        self.epsilon = 1.0e-4
         if modality not in ['Lloyd', 'k-Mediods', 'k-Means', 'original-k-Means', 'LBG']:
             raise Exception('Wrong modality ' + modality)
         self.verbosity = verbosity
@@ -98,11 +99,12 @@ class KMeans:
 
         iteration = 0
         changes_counter = 1
-        epsilon = 1.0e-4
-        if self.verbosity > 0:
+
+        if self.verbosity > 1:
             print('iteration', iteration, 'max_iter', self.max_iter,
                     'changes', changes_counter, 'relative improvement', self.improvement())
-        while iteration < self.max_iter and changes_counter > 0 and self.improvement() > epsilon:
+
+        while iteration < self.max_iter and changes_counter > 0 and self.improvement() > self.epsilon:
             changes_counter = self.fit_iteration(X)
             iteration += 1
             if self.verbosity > 0:
@@ -117,12 +119,12 @@ class KMeans:
 
         iteration = 0
         changes_counter = 1
-        epsilon = 1.0e-4
 
-        if self.verbosity > 0:
+        if self.verbosity > 1:
             print('iteration', iteration, 'max_iter', self.max_iter,
                     'changes', changes_counter, 'relative improvement', self.improvement())
-        while iteration < self.max_iter and changes_counter > 0 and self.improvement() > epsilon:
+
+        while iteration < self.max_iter and changes_counter > 0 and self.improvement() > self.epsilon:
             changes_counter = self.fit_iteration(X)
             iteration += 1
             if self.verbosity > 0:
@@ -157,13 +159,17 @@ class KMeans:
 
     # --------------------------------------------------------------------------------
     def mediod_from(self, samples):
-        m = 0
-        min_dist = sum(metrics.pairwise.euclidean_distances(samples, [samples[0]]))
-        for i in range(1, len(samples)):
-            dist = sum(metrics.pairwise.euclidean_distances(samples, [samples[i]]))
-            if dist < min_dist:
-                min_dist = dist
-                m = i
+        if len(samples) <= 10000:
+            distances = metrics.pairwise.euclidean_distances(samples, samples, squared = True).sum(axis = 1)
+            m = numpy.argmin(distances)
+        else:
+            m = 0
+            min_dist = sum(metrics.pairwise.euclidean_distances(samples, [samples[0]], squared = True))
+            for i in range(1, len(samples)):
+                dist = sum(metrics.pairwise.euclidean_distances(samples, [samples[i]], squared = True))
+                if dist < min_dist:
+                    min_dist = dist
+                    m = i
         return samples[m]
     # --------------------------------------------------------------------------------
 

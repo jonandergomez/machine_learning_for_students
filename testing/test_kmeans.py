@@ -1,7 +1,7 @@
 """
     Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
-    Version: 1.0
-    Date: May 2021
+    Version: 1.2
+    Date: September 2021
     Universitat Politecnica de Valencia
     Technical University of Valencia TU.VLC
 
@@ -14,29 +14,39 @@ import sys
 import time
 import numpy
 
+from sklearn.datasets import make_blobs
+from sklearn.metrics import silhouette_score, calinski_harabasz_score, davies_bouldin_score
+
 from matplotlib import pyplot
 
 from machine_learning import KMeans
 
 if __name__ == '__main__':
 
-    lloyd   = KMeans(n_clusters = 10, verbosity = 1, modality = 'Lloyd')
-    kmediods = KMeans(n_clusters = 10, verbosity = 1, modality = 'k-Mediods')
-    original_kmeans = KMeans(n_clusters = 10, verbosity = 1, modality = 'original-k-Means')
+    K = 10
+    K2 = 10 # set a smaller value to study the behaviour of the different algorithms when using make_blobs()
 
-    N = 100000
-    N_cut = 10000
-    X = numpy.random.rand(N, 2) * 100
+    lloyd   = KMeans(n_clusters = K, verbosity = 1, modality = 'Lloyd', init = 'KMeans++')
+    lloyd.epsilon = 1.0e-9
+    kmediods = KMeans(n_clusters = K, verbosity = 1, modality = 'k-Mediods', init = 'KMeans++')
+    lloyd.epsilon = 1.0e-8
+    original_kmeans = KMeans(n_clusters = K, verbosity = 1, modality = 'original-k-Means')
+
+    N =       20000
+    N_cut =   20000
+
+    #X = numpy.random.rand(N, 2) * 100
+    X, y_true = make_blobs(n_samples = N, n_features = 2, centers = K2, cluster_std = 1.0, center_box = (-50.0, 50.0), shuffle = True)
 
     print('estimating with Lloyd')
     starting_time = time.process_time_ns()
-    lloyd.fit(X[:N_cut])
+    lloyd.fit(X)
     lloyd_process_time = time.process_time_ns() - starting_time
     print()
 
     print('estimating with Original K-Means')
     starting_time = time.process_time_ns()
-    original_kmeans.fit(X[:N_cut])
+    original_kmeans.fit(X)
     original_k_means_process_time = time.process_time_ns() - starting_time
     print()
 
@@ -69,14 +79,20 @@ if __name__ == '__main__':
 
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
-    fig, axes = pyplot.subplots(nrows = 1, ncols = len(list_of_models), figsize = (4 * len(list_of_models), 4))
+    fig, axes = pyplot.subplots(nrows = 1, ncols = len(list_of_models), figsize = (4 * len(list_of_models), 5))
     for i in range(len(list_of_models)):
         axis = axes[i]
         model_name, model, _ = list_of_models[i]
         y = model.predict(X)
+        #
+        silh_score = silhouette_score(X, y)
+        ch_score = calinski_harabasz_score(X, y)
+        db_score = davies_bouldin_score(X, y)
+        #
         labels = numpy.unique(y)
         for l in labels:
             axis.scatter(X[y == l, 0], X[y == l, 1], s = 10, color = colors[l], alpha = 0.5)
+            axis.set_xlabel('Silhouette score = %.3f \n Calinsky Harabasz score = %.3f \n Davies Bouldin score = %.3f' % (silh_score, ch_score, db_score))
         clusters = model.cluster_centers_
         axis.scatter(clusters[:, 0], clusters[:, 1], s = 50, color = 'black', alpha = 1.0, marker = '*')
         axis.set_title(model_name)
