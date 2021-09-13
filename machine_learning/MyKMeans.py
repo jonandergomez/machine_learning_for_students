@@ -78,7 +78,7 @@ class KMeans:
             #
         elif self.modality == 'LBG':
             #
-            self.lgb(X, K = self.n_clusters)
+            self.lbg(X, K = self.n_clusters)
             #
         elif self.modality in ['k-Means', 'original-k-Means']:
             #
