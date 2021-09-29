@@ -183,7 +183,7 @@ class MLE:
         if max_components is None :
             raise Exception("Maximum Likelihood Estimation cannot be done without a limit in the number of components of the GMM!")
 
-        log_file = open(self.log_dir + "/OUT", 'w')
+        log_file = open(self.log_dir + "/OUT", 'a')
 
         num_samples = samples.count()
 

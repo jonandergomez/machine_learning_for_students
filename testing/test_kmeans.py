@@ -32,11 +32,11 @@ if __name__ == '__main__':
     lloyd.epsilon = 1.0e-8
     original_kmeans = KMeans(n_clusters = K, verbosity = 1, modality = 'original-k-Means')
 
-    N =       20000
+    N =       200000
     N_cut =   20000
 
     #X = numpy.random.rand(N, 2) * 100
-    X, y_true = make_blobs(n_samples = N, n_features = 2, centers = K2, cluster_std = 1.0, center_box = (-50.0, 50.0), shuffle = True)
+    X, y_true = make_blobs(n_samples = N, n_features = 2, centers = K2, cluster_std = 2.0, center_box = (-50.0, 50.0), shuffle = True)
 
     print('estimating with Lloyd')
     starting_time = time.process_time_ns()
@@ -79,7 +79,7 @@ if __name__ == '__main__':
 
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
-    fig, axes = pyplot.subplots(nrows = 1, ncols = len(list_of_models), figsize = (4 * len(list_of_models), 5))
+    fig, axes = pyplot.subplots(nrows = 1, ncols = len(list_of_models), figsize = (4 * len(list_of_models), 6))
     for i in range(len(list_of_models)):
         axis = axes[i]
         model_name, model, _ = list_of_models[i]
@@ -97,4 +97,5 @@ if __name__ == '__main__':
         axis.scatter(clusters[:, 0], clusters[:, 1], s = 50, color = 'black', alpha = 1.0, marker = '*')
         axis.set_title(model_name)
     #
+    pyplot.tight_layout()
     pyplot.show()
