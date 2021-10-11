@@ -174,6 +174,37 @@ class KMeans:
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
+    def selective_splitting(self, X, K = None, verbose = 0):
+        #
+        if K is None : raise Exception('The number of desired clusters must be specified!')
+        #
+        self.cluster_centers_ = numpy.zeros([K, X.shape[1]])
+        temp_kmeans = KMeans(n_clusters = 2, modality = 'Lloyd', init = 'KMeans++', verbosity = verbose)
+        temp_kmeans.fit(X)
+        self.n_clusters = temp_kmeans.n_clusters
+        for c in range(self.n_clusters):
+            self.cluster_centers_[c][:] = temp_kmeans.cluster_centers_[c][:]
+        #
+        while self.n_clusters < K:
+            y_pred, distances = self.predict(X, True)
+            #counters_and_class_index = [(sum(y_pred == c), c) for c in range(self.n_clusters)]
+            counters_and_class_index = [(distances[y_pred == c, c].sum(), c) for c in range(self.n_clusters)]
+            counters_and_class_index.sort(key = lambda x: x[0], reverse = True)
+            i = 0
+            m = self.n_clusters
+            #while 2 * i < m and self.n_clusters < K:
+            if i < m: # to FORCE entering one time
+                c = counters_and_class_index[i][1] # get the class index to be split
+                temp_kmeans = KMeans(n_clusters = 2, modality = 'Lloyd', init = 'KMeans++', verbosity = verbose)
+                temp_kmeans.fit(X[y_pred == c])
+                self.cluster_centers_[c              ][:] = temp_kmeans.cluster_centers_[0][:]
+                self.cluster_centers_[self.n_clusters][:] = temp_kmeans.cluster_centers_[1][:]
+                self.n_clusters += 1
+                i += 1
+            #
+            self.lloyd(X)
+        #
+    # --------------------------------------------------------------------------------
     def lbg(self, X, K = None, verbose = 0):
         #
         if K is None : raise Exception('The number of desired clusters must be specified!')
@@ -254,7 +285,7 @@ class KMeans:
             #self.cluster_centers_[k] = self.cluster_centers_[k] * (1 - alpha) + X[n] * alpha
 
     # --------------------------------------------------------------------------------
-    def predict(self, X):
+    def predict(self, X, return_distances = False):
         distances = metrics.pairwise.euclidean_distances(X, self.cluster_centers_)
         Y = numpy.argmin(distances, axis = 1)
         self.J = numpy.min(distances, axis = 1).sum()
@@ -266,7 +297,10 @@ class KMeans:
             self.J = self.J + distances[n][Y[n]]
         '''
         self.J = self.J / len(X)
-        return Y
+        if return_distances:
+            return Y, distances
+        else:
+            return Y
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------

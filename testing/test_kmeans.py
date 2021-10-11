@@ -31,8 +31,10 @@ if __name__ == '__main__':
     kmediods = KMeans(n_clusters = K, verbosity = 1, modality = 'k-Mediods', init = 'KMeans++')
     lloyd.epsilon = 1.0e-8
     original_kmeans = KMeans(n_clusters = K, verbosity = 1, modality = 'original-k-Means')
+    new_version   = KMeans(n_clusters = K, verbosity = 1, modality = 'Lloyd', init = 'KMeans++')
+    new_version.epsilon = 1.0e-9
 
-    N =       200000
+    N =       20000
     N_cut =   20000
 
     #X = numpy.random.rand(N, 2) * 100
@@ -50,9 +52,15 @@ if __name__ == '__main__':
     original_k_means_process_time = time.process_time_ns() - starting_time
     print()
 
+    print('estimating with new version')
+    starting_time = time.process_time_ns()
+    new_version.selective_splitting(X, K = K, verbose = 1)
+    new_version_k_means_process_time = time.process_time_ns() - starting_time
+    print() #new_version.n_clusters)
+
     print('estimating with K-Mediods')
     starting_time = time.process_time_ns()
-    kmediods.fit(X[:N_cut])
+    #kmediods.fit(X[:N_cut])
     kmediods_process_time = time.process_time_ns() - starting_time
     print()
 
@@ -60,6 +68,7 @@ if __name__ == '__main__':
     print('BENCHMARKING')
     print('    %-20s  %12.3f ms' % ('Lloyd', lloyd_process_time / 1.0e+6))
     print('    %-20s  %12.3f ms' % ('Original K-Means', original_k_means_process_time / 1.0e+6))
+    print('    %-20s  %12.3f ms' % ('New Version', new_version_k_means_process_time / 1.0e+6))
     print('    %-20s  %12.3f ms' % ('K-Mediods', kmediods_process_time / 1.0e+6))
 
     #print(lloyd.cluster_centers_)
@@ -67,7 +76,11 @@ if __name__ == '__main__':
     #print(original_kmeans.cluster_centers_)
 
 
-    list_of_models = [('Lloyd', lloyd, 'red'), ('K-Mediods', kmediods, 'green'), ('Original K-Means', original_kmeans, 'magenta')]
+    list_of_models = list()
+    list_of_models.append(('Lloyd', lloyd, 'red'))
+    #list_of_models.append(('K-Mediods', kmediods, 'green'))
+    list_of_models.append(('Original K-Means', original_kmeans, 'magenta'))
+    list_of_models.append(('New Version', new_version, 'orange'))
 
 
     pyplot.scatter(X[:N_cut, 0], X[:N_cut, 1], s = 10, color = 'blue', alpha = 0.2)
