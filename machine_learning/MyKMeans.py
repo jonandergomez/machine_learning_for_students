@@ -187,13 +187,13 @@ class KMeans:
         #
         while self.n_clusters < K:
             y_pred, distances = self.predict(X, True)
-            #counters_and_class_index = [(sum(y_pred == c), c) for c in range(self.n_clusters)]
-            counters_and_class_index = [(distances[y_pred == c, c].sum(), c) for c in range(self.n_clusters)]
+            counters_and_class_index = [(sum(y_pred == c), c) for c in range(self.n_clusters)]
+            #counters_and_class_index = [(distances[y_pred == c, c].sum(), c) for c in range(self.n_clusters)]
             counters_and_class_index.sort(key = lambda x: x[0], reverse = True)
             i = 0
             m = self.n_clusters
             #while 2 * i < m and self.n_clusters < K:
-            if i < m: # to FORCE entering one time
+            if i < m: # to FORCE entering just one time
                 c = counters_and_class_index[i][1] # get the class index to be split
                 temp_kmeans = KMeans(n_clusters = 2, modality = 'Lloyd', init = 'KMeans++', verbosity = verbose)
                 temp_kmeans.fit(X[y_pred == c])

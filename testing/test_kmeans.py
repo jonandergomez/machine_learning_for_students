@@ -24,21 +24,21 @@ from machine_learning import KMeans
 if __name__ == '__main__':
 
     K = 10
-    K2 = 10 # set a smaller value to study the behaviour of the different algorithms when using make_blobs()
+    K2 = 7 # set a smaller value to study the behaviour of the different algorithms when using make_blobs()
 
     lloyd   = KMeans(n_clusters = K, verbosity = 1, modality = 'Lloyd', init = 'KMeans++')
     lloyd.epsilon = 1.0e-9
     kmediods = KMeans(n_clusters = K, verbosity = 1, modality = 'k-Mediods', init = 'KMeans++')
     lloyd.epsilon = 1.0e-8
     original_kmeans = KMeans(n_clusters = K, verbosity = 1, modality = 'original-k-Means')
-    new_version   = KMeans(n_clusters = K, verbosity = 1, modality = 'Lloyd', init = 'KMeans++')
-    new_version.epsilon = 1.0e-9
+    selective_splitting   = KMeans(n_clusters = K, verbosity = 1, modality = 'Lloyd', init = 'KMeans++')
+    selective_splitting.epsilon = 1.0e-9
 
     N =       20000
     N_cut =   20000
 
-    #X = numpy.random.rand(N, 2) * 100
-    X, y_true = make_blobs(n_samples = N, n_features = 2, centers = K2, cluster_std = 2.0, center_box = (-50.0, 50.0), shuffle = True)
+    X = numpy.random.rand(N, 2) * 100
+    #X, y_true = make_blobs(n_samples = N, n_features = 2, centers = K2, cluster_std = 2.0, center_box = (-50.0, 50.0), shuffle = True)
 
     print('estimating with Lloyd')
     starting_time = time.process_time_ns()
@@ -54,13 +54,13 @@ if __name__ == '__main__':
 
     print('estimating with new version')
     starting_time = time.process_time_ns()
-    new_version.selective_splitting(X, K = K, verbose = 1)
-    new_version_k_means_process_time = time.process_time_ns() - starting_time
-    print() #new_version.n_clusters)
+    selective_splitting.selective_splitting(X, K = K, verbose = 1)
+    selective_splitting_process_time = time.process_time_ns() - starting_time
+    print() #selective_splitting.n_clusters)
 
     print('estimating with K-Mediods')
     starting_time = time.process_time_ns()
-    #kmediods.fit(X[:N_cut])
+    kmediods.fit(X[:N_cut])
     kmediods_process_time = time.process_time_ns() - starting_time
     print()
 
@@ -68,7 +68,7 @@ if __name__ == '__main__':
     print('BENCHMARKING')
     print('    %-20s  %12.3f ms' % ('Lloyd', lloyd_process_time / 1.0e+6))
     print('    %-20s  %12.3f ms' % ('Original K-Means', original_k_means_process_time / 1.0e+6))
-    print('    %-20s  %12.3f ms' % ('New Version', new_version_k_means_process_time / 1.0e+6))
+    print('    %-20s  %12.3f ms' % ('Selective Splitting', selective_splitting_process_time / 1.0e+6))
     print('    %-20s  %12.3f ms' % ('K-Mediods', kmediods_process_time / 1.0e+6))
 
     #print(lloyd.cluster_centers_)
@@ -78,9 +78,9 @@ if __name__ == '__main__':
 
     list_of_models = list()
     list_of_models.append(('Lloyd', lloyd, 'red'))
-    #list_of_models.append(('K-Mediods', kmediods, 'green'))
+    list_of_models.append(('K-Mediods', kmediods, 'green'))
     list_of_models.append(('Original K-Means', original_kmeans, 'magenta'))
-    list_of_models.append(('New Version', new_version, 'orange'))
+    list_of_models.append(('Selective Splitting', selective_splitting, 'orange'))
 
 
     pyplot.scatter(X[:N_cut, 0], X[:N_cut, 1], s = 10, color = 'blue', alpha = 0.2)
