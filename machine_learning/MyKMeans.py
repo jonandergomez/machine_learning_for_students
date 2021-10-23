@@ -1,7 +1,7 @@
 """
     Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
-    Version: 4.0
-    Date: May 2021
+    Version: 5.0
+    Date: Oct 2021
     Universitat Politecnica de Valencia
     Technical University of Valencia TU.VLC
 
@@ -11,12 +11,14 @@
 
 import os
 import sys
+import time
 import random
 import numpy
 import gzip
 import pickle
 
-from sklearn import metrics
+from sklearn.metrics.pairwise import euclidean_distances
+#from sklearn.metrics import pairwise_distances
 
 class KMeans:
     """
@@ -52,14 +54,18 @@ class KMeans:
         self.oldJ = 9.9e+300
         self.modality = modality
         self.epsilon = 1.0e-4
+        self.block = max(1000, min(50000, int((1024 ** 2) / n_clusters * 8)))
         if modality not in ['Lloyd', 'k-Mediods', 'k-Means', 'original-k-Means', 'LBG']:
             raise Exception('Wrong modality ' + modality)
         self.verbosity = verbosity
+        self.X_norm_squared = None
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
     def fit(self, X):
-
+        #
+        self.X_norm_squared = (X ** 2).sum(axis = 1).reshape(-1, 1)
+        #
         if self.modality in ['Lloyd', 'k-Mediods']:
             #
             self.cluster_centers_ = numpy.zeros([self.n_clusters, X.shape[1]])
@@ -89,11 +95,13 @@ class KMeans:
             raise Exception('Wrong modality ' + self.modality)
         #
         self.cluster_pred = None
+        self.X_norm_squared = None
         return self
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
     def lloyd(self, X):
+        t_start = time.time()
         self.oldJ = self.J
         self.cluster_pred = self.predict(X)
 
@@ -102,18 +110,20 @@ class KMeans:
 
         if self.verbosity > 1:
             print('iteration', iteration, 'max_iter', self.max_iter,
-                    'changes', changes_counter, 'relative improvement', self.improvement())
+                    'changes', changes_counter, 'relative improvement', self.improvement(), 'time lapse', time.time() - t_start)
 
         while iteration < self.max_iter and changes_counter > 0 and self.improvement() > self.epsilon:
+            t_start = time.time()
             changes_counter = self.fit_iteration(X)
             iteration += 1
             if self.verbosity > 0:
                 print('iteration', iteration, 'max_iter', self.max_iter,
-                        'changes', changes_counter, 'relative improvement', self.improvement())
+                        'changes', changes_counter, 'relative improvement', self.improvement(), 'time lapse', time.time() - t_start)
 
         return self
     # --------------------------------------------------------------------------------
     def k_mediods(self, X):
+        t_start = time.time()
         self.oldJ = self.J
         self.cluster_pred = self.predict(X)
 
@@ -122,21 +132,22 @@ class KMeans:
 
         if self.verbosity > 1:
             print('iteration', iteration, 'max_iter', self.max_iter,
-                    'changes', changes_counter, 'relative improvement', self.improvement())
+                    'changes', changes_counter, 'relative improvement', self.improvement(), 'time lapse', time.time() - t_start)
 
         while iteration < self.max_iter and changes_counter > 0 and self.improvement() > self.epsilon:
+            t_start = time.time()
             changes_counter = self.fit_iteration(X)
             iteration += 1
             if self.verbosity > 0:
                 print('iteration', iteration, 'max_iter', self.max_iter,
-                        'changes', changes_counter, 'relative improvement', self.improvement())
+                        'changes', changes_counter, 'relative improvement', self.improvement(), 'time lapse', time.time() - t_start)
 
         return self
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
     def fit_iteration(self, X):
-
+        #print('updating codebook', flush = True)
         for c in range(len(self.cluster_centers_)):
             samples_in_cluster = X[self.cluster_pred == c]
             if len(samples_in_cluster) > 0:
@@ -150,26 +161,26 @@ class KMeans:
         self.oldJ = self.J
         y_pred = self.predict(X)
 
-        changes_counter = numpy.abs(self.cluster_pred - y_pred).sum()
+        changes_counter = numpy.abs(self.cluster_pred != y_pred).sum()
         self.cluster_pred[:] = y_pred[:]
-        #print self.cluster_centers_ # For looking the evolution
 
         return changes_counter
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
     def mediod_from(self, samples):
-        if len(samples) <= 10000:
-            distances = metrics.pairwise.euclidean_distances(samples, samples, squared = True).sum(axis = 1)
-            m = numpy.argmin(distances)
-        else:
-            m = 0
-            min_dist = sum(metrics.pairwise.euclidean_distances(samples, [samples[0]], squared = True))
-            for i in range(1, len(samples)):
-                dist = sum(metrics.pairwise.euclidean_distances(samples, [samples[i]], squared = True))
-                if dist < min_dist:
-                    min_dist = dist
-                    m = i
+        m = 0
+        min_dist = numpy.inf
+        i = 0
+        while i < len(samples):
+            distances = euclidean_distances(samples[i : i + self.block], samples[i : i + self.block], squared = True).sum(axis = 1)
+            j = distances.argmin()
+            if distances[j] < min_dist:
+                min_dist = distances[j]
+                m = i + j
+            #
+            i += self.block
+        #
         return samples[m]
     # --------------------------------------------------------------------------------
 
@@ -186,9 +197,8 @@ class KMeans:
             self.cluster_centers_[c][:] = temp_kmeans.cluster_centers_[c][:]
         #
         while self.n_clusters < K:
-            y_pred, distances = self.predict(X, True)
+            y_pred = self.predict(X)
             counters_and_class_index = [(sum(y_pred == c), c) for c in range(self.n_clusters)]
-            #counters_and_class_index = [(distances[y_pred == c, c].sum(), c) for c in range(self.n_clusters)]
             counters_and_class_index.sort(key = lambda x: x[0], reverse = True)
             i = 0
             m = self.n_clusters
@@ -271,9 +281,7 @@ class KMeans:
     def original_k_means_iteration(self, X):
         for n in range(len(X)):
             # Classification
-            _diffs_ = self.cluster_centers_ - X[n]
-            _distances_ = (_diffs_ * _diffs_).sum(axis = 1)
-            k = _distances_.argmin()
+            k = ((self.cluster_centers_ - X[n]) ** 2).sum(axis = 1).argmin()
             # Partition update
             self.counters[k] += 1
             # Codebook update
@@ -285,27 +293,44 @@ class KMeans:
             #self.cluster_centers_[k] = self.cluster_centers_[k] * (1 - alpha) + X[n] * alpha
 
     # --------------------------------------------------------------------------------
-    def predict(self, X, return_distances = False):
-        distances = metrics.pairwise.euclidean_distances(X, self.cluster_centers_)
-        Y = numpy.argmin(distances, axis = 1)
-        self.J = numpy.min(distances, axis = 1).sum()
-        '''
-        self.J = 0.0
-        Y = numpy.ones(len(X), dtype = int) * -1
-        for n in range(len(X)):
-            Y[n] = numpy.argmin(distances[n])
-            self.J = self.J + distances[n][Y[n]]
-        '''
-        self.J = self.J / len(X)
-        if return_distances:
-            return Y, distances
-        else:
-            return Y
+    def predict(self, X):
+        #print('predicting', flush = True)
+        Y = list()
+        self.J = 0
+        i = 0
+        while i < len(X):
+            if self.X_norm_squared is not None:
+                distances = euclidean_distances(X[i : i + self.block], self.cluster_centers_, squared = True, X_norm_squared = self.X_norm_squared[i : i + self.block])
+                #distances = pairwise_distances(X[i : i + self.block], self.cluster_centers_, n_jobs = -1)
+            else:
+                distances = euclidean_distances(X[i : i + self.block], self.cluster_centers_, squared = True, X_norm_squared = None)
+                #distances = pairwise_distances(X[i : i + self.block], self.cluster_centers_, n_jobs = -1)
+            #
+            Y += distances.argmin(axis = 1).tolist()
+            self.J += distances.min(axis = 1).sum()
+            #
+            i += self.block
+        #
+        self.J /= len(X)
+        return numpy.array(Y)
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
-    def distances(self, X):
-        return metrics.pairwise.euclidean_distances(X, self.cluster_centers_)
+    def distances(self, X, Y = None, squared = False):
+        distances = list()
+        if Y is None:
+            Y = self.cluster_centers_
+        i = 0
+        while i < len(X):
+            if self.X_norm_squared is not None:
+                distances.append(euclidean_distances(X[i : i + self.block], Y, squared = squared, X_norm_squared = self.X_norm_squared[i : i + self.block]))
+                #distances.append(pairwise_distances(X[i : i + self.block], Y, n_jobs = -1))
+            else:
+                distances.append(euclidean_distances(X[i : i + self.block], Y, squared = squared, X_norm_squared = None))
+                #distances.append(pairwise_distances(X[i : i + self.block], Y, n_jobs = -1))
+            i += self.block
+        distances = numpy.vstack(distances)
+        return distances
     # --------------------------------------------------------------------------------
 
     # --------------------------------------------------------------------------------
@@ -315,6 +340,9 @@ class KMeans:
 
     # --------------------------------------------------------------------------------
     def katsavounidis(self, X):
+        if self.X_norm_squared is None:
+            self.X_norm_squared = (X ** 2).sum(axis = 1).reshape(-1, 1)
+        #
         if self.init == 'Katsavounidis':
             self.cluster_centers_[0] = numpy.mean(X, axis = 0)
         elif self.init == 'KMeans++':
@@ -323,14 +351,16 @@ class KMeans:
             raise Exception('Non-expected initialization' + self.init)
         c = 1
         while c < self.n_clusters:
-            distances = metrics.pairwise.euclidean_distances(X, self.cluster_centers_[:c])
+            t_start = time.time()
+            distances = self.distances(X, Y = self.cluster_centers_[:c], squared = True)
             distances = numpy.min(distances, axis = 1)
             self.cluster_centers_[c, :] = X[numpy.argmax(distances), :]
+            print(self.init, 'c = ', c, 'time lapse', time.time() - t_start)
             c += 1
-        distances = metrics.pairwise.euclidean_distances(X, self.cluster_centers_)
-        distances = numpy.min(distances, axis = 1)
-        self.cluster_centers_[0, :] = X[ numpy.argmax(distances), :]
-        #print self.cluster_centers_
+        if self.init == 'KMeans++':
+            distances = self.distances(X, Y = self.cluster_centers_, squared = True)
+            distances = numpy.min(distances, axis = 1)
+            self.cluster_centers_[0, :] = X[numpy.argmax(distances), :]
     # --------------------------------------------------------------------------------
 
 
