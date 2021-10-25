@@ -59,7 +59,7 @@ if __name__ == '__main__':
         h_2 = h ** 2
         density_1 = numpy.exp(-0.5 * (((X_1 - p) ** 2).sum(axis = 1) / h_2)).sum() / len(X_1)
         density_2 = numpy.exp(-0.5 * (((X_2 - p) ** 2).sum(axis = 1) / h_2)).sum() / len(X_2)
-        prob_1 = density_1 / (1.0e-5 + density_1 + density_2)
+        prob_1 = density_1 / max(1.0e-5, density_1 + density_2)
         score = 2 * prob_1 - 1
         return score
 
@@ -67,7 +67,7 @@ if __name__ == '__main__':
         h_2 = h ** 2
         density_1 = numpy.exp(-0.5 * (((lloyd_1.cluster_centers_ - p) ** 2).sum(axis = 1) / h_2)).sum() / len(lloyd_1.cluster_centers_)
         density_2 = numpy.exp(-0.5 * (((lloyd_2.cluster_centers_ - p) ** 2).sum(axis = 1) / h_2)).sum() / len(lloyd_2.cluster_centers_)
-        prob_1 = density_1 / (1.0e-5 + density_1 + density_2)
+        prob_1 = density_1 / max(1.0e-5, density_1 + density_2)
         score = 2 * prob_1 - 1
         return score
         
@@ -86,10 +86,10 @@ if __name__ == '__main__':
             _z2_[i, j] = assignment_2(_xy_[i, j], band_width)
 
 
-    fig, axes = pyplot.subplots(nrows = 2, ncols = 2, figsize = (15, 12))
+    fig, axes = pyplot.subplots(nrows = 2, ncols = 2, figsize = (10, 7))
     #
     axis = axes[0, 0]
-    axis.scatter(X_1[:, 0], X_1[:, 1], s = 10, color = 'blue',   alpha = 0.2, label = 'class 1')
+    axis.scatter(X_1[:, 0], X_1[:, 1], s = 10, color = 'cyan',   alpha = 0.2, label = 'class 1')
     axis.scatter(X_2[:, 0], X_2[:, 1], s = 10, color = 'orange', alpha = 0.2, label = 'class 2')
     axis.set_xlim(0, 15)
     axis.set_ylim(0, 15)
@@ -98,7 +98,7 @@ if __name__ == '__main__':
     axis = axes[0, 1]
     codebook_1 = lloyd_1.cluster_centers_
     codebook_2 = lloyd_2.cluster_centers_
-    axis.scatter(codebook_1[:, 0], codebook_1[:, 1], s = 30, color = 'blue',   alpha = 0.7, label = 'class 1')
+    axis.scatter(codebook_1[:, 0], codebook_1[:, 1], s = 30, color = 'cyan',   alpha = 0.7, label = 'class 1')
     axis.scatter(codebook_2[:, 0], codebook_2[:, 1], s = 30, color = 'orange', alpha = 0.7, label = 'class 2')
     axis.set_xlim(0, 15)
     axis.set_ylim(0, 15)
@@ -113,7 +113,7 @@ if __name__ == '__main__':
     axis.set_xlim(0, 15)
     axis.set_ylim(0, 15)
     axis.contourf(_x_, _y_, _z2_, levels = 50, cmap = 'RdBu')
-    axis.scatter(codebook_1[:, 0], codebook_1[:, 1], s = 30, color = 'blue',   alpha = 0.7)
+    axis.scatter(codebook_1[:, 0], codebook_1[:, 1], s = 30, color = 'cyan',   alpha = 0.7)
     axis.scatter(codebook_2[:, 0], codebook_2[:, 1], s = 30, color = 'orange', alpha = 0.7)
     #
     pyplot.suptitle(f'band width = {band_width}  K = {K}')
