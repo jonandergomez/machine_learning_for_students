@@ -1,7 +1,7 @@
 """
     Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
-    Version: 2.0
-    Date: October 2016
+    Version: 3.0
+    Date: February 2022
     Universitat Politecnica de Valencia
     Technical University of Valencia TU.VLC
 
