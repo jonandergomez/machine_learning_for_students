@@ -200,19 +200,15 @@ class KMeans:
             y_pred = self.predict(X)
             counters_and_class_index = [(sum(y_pred == c), c) for c in range(self.n_clusters)]
             counters_and_class_index.sort(key = lambda x: x[0], reverse = True)
-            i = 0
-            m = self.n_clusters
-            #while 2 * i < m and self.n_clusters < K:
-            if i < m: # to FORCE entering just one time
-                c = counters_and_class_index[i][1] # get the class index to be split
-                temp_kmeans = KMeans(n_clusters = 2, modality = 'Lloyd', init = 'KMeans++', verbosity = verbose)
-                temp_kmeans.fit(X[y_pred == c])
-                self.cluster_centers_[c              ][:] = temp_kmeans.cluster_centers_[0][:]
-                self.cluster_centers_[self.n_clusters][:] = temp_kmeans.cluster_centers_[1][:]
-                self.n_clusters += 1
-                i += 1
+            print(counters_and_class_index)
+            c = counters_and_class_index[0][1] # get the class index to be split
+            temp_kmeans = KMeans(n_clusters = 2, modality = 'Lloyd', init = 'KMeans++', verbosity = verbose)
+            temp_kmeans.fit(X[y_pred == c])
+            self.cluster_centers_[c              ][:] = temp_kmeans.cluster_centers_[0][:]
+            self.cluster_centers_[self.n_clusters][:] = temp_kmeans.cluster_centers_[1][:]
+            self.n_clusters += 1
             #
-            self.lloyd(X)
+        self.lloyd(X)
         #
     # --------------------------------------------------------------------------------
     def lbg(self, X, K = None, verbose = 0):
@@ -243,7 +239,7 @@ class KMeans:
     # --------------------------------------------------------------------------------
     def drop_empty_clusters(self, X):
         y_pred = self.predict(X)
-        centroids=list()
+        centroids = list()
         for c in range(len(self.cluster_centers_)):
             if sum(y_pred == c) > 0:
                 centroids.append(self.cluster_centers_[c].copy())
