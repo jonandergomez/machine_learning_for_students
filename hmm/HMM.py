@@ -111,6 +111,11 @@ class HMM:
             else:
                 for s in range(len(self.S)):
                     self.S[s] = State(identifier = ('S_%s_%d' % (identifier, s)), modality = self.modality, num_symbols = self.num_symbols, sample_dim = self.sample_dim, num_mixtures = num_mixtures, input_file = None, first_line = None)
+
+                    if len(self.S) == self.num_symbols:
+                        self.S[s].B_accumulator[s] += 10000.0 # this must be studied in detail and, maybe, modified
+                        # print('setting what we are interested')
+                        self.S[s].normalize()
             #
             if (not self.left_to_right) and 'pi' in dict_3 :
                 self.P = dict_3['pi']

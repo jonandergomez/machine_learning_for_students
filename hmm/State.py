@@ -48,7 +48,7 @@ class State:
             order to avoid that the updates for all the parameters are allways the same.
             The method normalize() ensures that sum(self.B) is equal to one.
             """
-            self.B = numpy.random.rand(num_symbols) * 1.0e-5
+            self.B = numpy.random.rand(num_symbols) # * 1.0e-5
         if self.B is not None:
             self.B_accumulator = numpy.copy(self.B)
         self.normalize()
