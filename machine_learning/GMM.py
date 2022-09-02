@@ -1,7 +1,7 @@
 """
     Author: Jon Ander Gomez Adrian (jon@dsic.upv.es, http://personales.upv.es/jon)
-    Version: 2.0
-    Date: October 2016
+    Version: 3.0
+    Date: February 2022
     Universitat Politecnica de Valencia
     Technical University of Valencia TU.VLC
 
@@ -242,14 +242,16 @@ class GMM:
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
-    def log_densities(self, sample):
+    def log_densities(self, sample, with_a_priori_probs = True):
         _dists = self.mahalanobis(sample)
-        _log_densities = self.log_prioris - 0.5 * (_dists + self.log_determinants + self.log_2_pi)
-        return _log_densities
+        if with_a_priori_probs:
+            return self.log_prioris - 0.5 * (_dists + self.log_determinants + self.log_2_pi)
+        else:
+            return - 0.5 * (_dists + self.log_determinants + self.log_2_pi)
     # ------------------------------------------------------------------------------
 
     # ------------------------------------------------------------------------------
-    def log_densities_batch(self, sample):
+    def log_densities_batch(self, sample, with_a_priori_probs = True):
         _dists = self.mahalanobis_batch(sample)
         """
             _dists is a matrix of (C x B) where C is the number of classes in the GMM and B is the number of samples in the batch
@@ -261,7 +263,11 @@ class GMM:
             so:
                 _log_densities is a matrix of (C x B) where C is the number of classes in the GMM and B is the number of samples in the batch
         """
-        _log_densities = self.log_prioris[:, numpy.newaxis] - 0.5 * (_dists + self.log_determinants[:,numpy.newaxis] + self.log_2_pi)
+        if with_a_priori_probs:
+            _log_densities = self.log_prioris[:, numpy.newaxis] - 0.5 * (_dists + self.log_determinants[:,numpy.newaxis] + self.log_2_pi)
+        else:
+            _log_densities = - 0.5 * (_dists + self.log_determinants[:,numpy.newaxis] + self.log_2_pi)
+        #
         return _log_densities
     # ------------------------------------------------------------------------------
 

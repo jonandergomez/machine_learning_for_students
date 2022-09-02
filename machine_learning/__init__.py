@@ -19,10 +19,11 @@ from .GMM import GMM
 from .MLE import MLE
 from .MyKernel import MyKernel
 from .MyKernelClassifier import MyKernelClassifier
+from .BallTree import BallTree
 from .MyKMeans import KMeans, kmeans_load
 from .MyGaussian import MyGaussian
 from .LinearDiscriminant import LinearDiscriminant
 from .gmm_classifier import GMM_classifier
 
 
-__all__ = ['KMeans', 'kmeans_load', 'GMM', 'MLE', 'GMM_classifier', 'MyKernel', 'MyKernelClassifier', 'MyGausian', 'LinearDiscriminant', 'generate_datasets']
+__all__ = ['KMeans', 'kmeans_load', 'GMM', 'MLE', 'GMM_classifier', 'MyKernel', 'BallTree', 'MyKernelClassifier', 'MyGausian', 'LinearDiscriminant', 'generate_datasets']
