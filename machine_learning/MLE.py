@@ -231,6 +231,40 @@ class MLE:
 # ---------------------------------------------------------------------------------            
 
 # ---------------------------------------------------------------------------------            
+    def fit_with_spark_one_gmm(self, spark_context = None, samples = None, epsilon = 1.0e-5):
+    
+        if spark_context is None :
+            raise Exception("Maximum Likelihood Estimation cannot be done without a SparkContext!")
+        if samples is None :
+            raise Exception("Maximum Likelihood Estimation cannot be done without samples!")
+
+        num_samples = samples.count()
+
+        logL = 0.0
+        iteration = 1
+        iterations_after_epsilon_reached = 10
+        relative_improvement = 1.0
+        while iterations_after_epsilon_reached > 0  and  iteration <= self.max_iterations:
+            #
+            nc = self.gmm.n_components
+            dim = self.gmm.dim
+            ct = self.gmm.covar_type
+            mv = self.gmm.min_var
+            _temp_gmm = samples.aggregate(GMM(nc, dim, ct, min_var = mv, _for_accumulating = True), self.add_sample, combine_gmms)
+            #
+            old_logL = logL
+            logL = _temp_gmm.log_likelihood / num_samples
+            #
+            relative_improvement = (old_logL - logL) / logL
+            self.gmm.update_parameters(_temp_gmm)
+            aic,bic = self.gmm.compute_AIC_and_BIC(logL * num_samples)
+            print("iteration %5d  logL = %e  delta_logL = %e   aic = %e  bic = %e" % (iteration, logL, relative_improvement, aic, bic))
+            iteration += 1
+            if abs(relative_improvement) < epsilon: iterations_after_epsilon_reached -= 1
+        #
+# ---------------------------------------------------------------------------------            
+
+# ---------------------------------------------------------------------------------            
     def add_sample(self, gmm, sample):
         #global _b_gmm
         #stable_gmm = _b_gmm.value
