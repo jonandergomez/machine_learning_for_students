@@ -28,7 +28,8 @@ class MyKernel:
     def fit(self, X):
         #self.data_ = numpy.clone(X)
         self.data_ = X
-        self.h = self.bandwidth / numpy.sqrt(len(X))
+        # self.h = self.bandwidth / numpy.sqrt(len(X)) # commented 2022-12-26
+        self.h = self.bandwidth
 
         return self
     # ------------------------------------------------------------------------------

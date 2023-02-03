@@ -185,9 +185,9 @@ class HMM:
     def initialize_gmm_from_kmeans(self, samples):
         from machine_learning import KMeans
         kmeans = KMeans(n_clusters = len(self.S), init = 'Katsavounidis', verbosity = 1)
-        print("HMM.initializegmm_from_kmeans() begins the fit", flush = True)
+        print("HMM.initialize_gmm_from_kmeans() begins the fit", flush = True)
         kmeans.fit(numpy.vstack(samples))
-        print("HMM.initializegmm_from_kmeans() ends the fit", flush = True)
+        print("HMM.initialize_gmm_from_kmeans() ends the fit", flush = True)
         for k in range(len(self.S)):
             self.S[k].gmm.initialize_from_centroids(kmeans.cluster_centers_[k])
     # --------------------------------------------------------------------------------------------------------------------------------------------
@@ -297,6 +297,12 @@ class HMM:
         gamma = alpha + beta # This must be a sum because what is stored in 'alpha' and 'beta' are logarithms of probabilities
         # Gamma must be normalized by means of P(O|lambda) : _Z_ = log P(O|lambda)
         gamma = gamma - _Z_
+        if _Z_.min() != _Z_.min():
+            print('gamma.min()', gamma.min())
+            print('gamma.max()', gamma.max())
+            print('_Z_.min()', _Z_.min())
+            print('_Z_.max()', _Z_.max(), flush = True)
+            raise Exception("nan appeared")
 
         return alpha, beta, gamma, B, _Z_
     # --------------------------------------------------------------------------------------------------------------------------------------------
@@ -315,6 +321,14 @@ class HMM:
         if self.P_accumulator is not None:
             if self.A.force_to_one_terminal_state: self.P_accumulator[-1] = 0.0
             self.P = self.P_accumulator / self.P_accumulator.sum()
+            min_p = min(self.P)
+            if min_p < 0.0:
+                print('baum_welch_update():', self.P_accumulator)
+                print('baum_welch_update():', self.P)
+                if abs(min_p) < 1.0e-6:
+                    self.P[self.P < 0] = 0
+                else:
+                    raise Exception('unexpected values!')
             self.log_P = numpy.log(self.P + Constants.k_zero_prob)
         for i in range(len(self.S)):
             self.S[i].prior = self.P[i]

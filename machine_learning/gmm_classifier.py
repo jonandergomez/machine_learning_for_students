@@ -42,8 +42,9 @@ class GMM_classifier:
         num_classes = len(numpy.unique(y))
         if num_classes != self.num_classes:
             self.num_classes = num_classes
-            self.mixtures = [GaussianMixture(n_components = self.n_components,
+            self.mixtures = [GaussianMixture(n_components = min(self.n_components, max(1, sum(y == c) // 20)),
                                              covariance_type = self.covar_type,
+                                             reg_covar = 1.0e-5,
                                              init_params = 'random',
                                              max_iter = self.max_iter,
                                              n_init = self.n_init,
