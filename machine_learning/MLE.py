@@ -149,6 +149,7 @@ class MLE:
         log_file = open(self.log_dir + "/OUT", 'a')
 
         old_gmm = self.gmm.clone()
+        self.dict_gmms = dict()
 
         logL = 0.0
         while self.gmm.n_components <= max_components:
@@ -157,6 +158,7 @@ class MLE:
             log_file.write("n_components %5d  logL = %e  aic %e  bic %e \n" % (self.gmm.n_components, logL, aic, bic))
             log_file.flush()
             old_gmm = self.gmm.clone()
+            self.dict_gmms[old_gmm.n_components] = old_gmm
             #
             """
             self.gmm.save_to_text( self.models_dir+'/gmm' ) NO NEEDED IF USING self.fit() 
