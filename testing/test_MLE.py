@@ -64,13 +64,13 @@ if __name__ == "__main__":
     #os.makedirs( base_dir+'/log',    exist_ok=True )
     #os.makedirs( base_dir+'/models', exist_ok=True )
 
-    mle = machine_learning.MLE(covar_type = covar_type, dim = X_train.shape[1], log_dir = base_dir + '/log', models_dir = base_dir + '/models', batch_size = 500)
+    mle = machine_learning.MLE(covar_type = covar_type, dim = X_train.shape[1], log_dir = base_dir + '/log', models_dir = base_dir + '/models')
 
     if spark_context is not None:
         samples = spark_context.parallelize(X_train, slices)
         samples.persist()
-        mle.fit_with_spark(spark_context = spark_context, samples = samples, max_components = max_components)
+        mle.fit_with_spark(spark_context = spark_context, samples = samples, max_components = max_components, batch_size = 500)
         samples.unpersist()
         spark_context.stop()
     else:
-        mle.fit_standalone(samples = X_train, max_components = max_components)
+        mle.fit_standalone(samples = X_train, max_components = max_components, batch_size = 500)

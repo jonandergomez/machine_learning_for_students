@@ -572,10 +572,9 @@ class GMM:
                 candidates = [0] * len(nsg)
                 max_c = len(nsg) // 2
                 i = 0
-                while _counter == 0 or i < max_c:
+                while max(candidates) < 2 or i <= max_c:
                     candidates[nsg[i][1]] += 1
                     candidates[tsg[i][1]] += 1
-                    if max(candidates) == 2: break
                     i += 1
                     
                 for c in range(len(candidates)):
