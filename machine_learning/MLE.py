@@ -185,10 +185,10 @@ class MLE:
         if max_components is None :
             raise Exception("Maximum Likelihood Estimation cannot be done without a limit in the number of components of the GMM!")
 
-        log_file = open(self.log_dir + "/OUT", 'a')
-
         num_samples = samples.count()
-
+        log_file = open(self.log_dir + "/OUT", 'a')
+        self.dict_gmms = dict()
+        last_computed_gmm = None
         logL = 0.0
         while self.gmm.n_components <= max_components:
             iteration = 1
@@ -222,14 +222,17 @@ class MLE:
             aic,bic = self.gmm.compute_AIC_and_BIC(logL * num_samples)
             log_file.write("n_components %5d  logL = %e  aic %e  bic %e \n" % (self.gmm.n_components, logL, aic, bic))
             log_file.flush()
+            #
+            self.dict_gmms[self.gmm.n_components] = last_computed_gmm = self.gmm.clone()
+            #
             self.gmm.save_to_text(self.models_dir + '/gmm')
             self.gmm.split(log_file)
             self.gmm.save_to_text(self.models_dir + '/gmm')
         # ---------------------------------------------------------------------------
         log_file.write("MLE task completed when %d components where execeeded with %d\n" % (max_components, self.gmm.n_components))
         log_file.flush()
-
         log_file.close()
+        self.gmm = last_computed_gmm
 # ---------------------------------------------------------------------------------            
 
 # ---------------------------------------------------------------------------------            

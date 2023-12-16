@@ -567,13 +567,22 @@ class GMM:
             else:
                 """
                     Splits those Gaussians which are in the first half of both lists.
+                    But guaranteeing at least one is split.
                 """
+                candidates = [0] * len(nsg)
                 max_c = len(nsg) // 2
-                for c in range(max_c):
-                    for i in range(max_c):
-                        if nsg[c][1] == tsg[i][1]:
-                            self.split_gaussian(nsg[c][1])
-                            _counter += 1
+                i = 0
+                while _counter == 0 or i < max_c:
+                    candidates[nsg[i][1]] += 1
+                    candidates[tsg[i][1]] += 1
+                    if max(candidates) == 2: break
+                    i += 1
+                    
+                for c in range(len(candidates)):
+                    if candidates[c] == 2:
+                        log_file.write("splitting component: %4d   nsg %3d %16.6f     tsg %3d %16.6f\n" % (c, nsg[c][1], nsg[c][0], tsg[c][1], tsg[c][0]))
+                        self.split_gaussian(c)
+                        _counter += 1
                 #
             if _counter == 0:
                 # When no Gaussian were split in the previous step two are split:
