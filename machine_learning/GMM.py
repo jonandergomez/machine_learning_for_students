@@ -576,7 +576,9 @@ class GMM:
                     candidates[nsg[i][1]] += 1
                     candidates[tsg[i][1]] += 1
                     i += 1
-                    
+                #
+                nsg.sort(key = lambda x: x[1])
+                tsg.sort(key = lambda x: x[1])
                 for c in range(len(candidates)):
                     if candidates[c] == 2:
                         log_file.write("splitting component: %4d   nsg %3d %16.6f     tsg %3d %16.6f\n" % (c, nsg[c][1], nsg[c][0], tsg[c][1], tsg[c][0]))
