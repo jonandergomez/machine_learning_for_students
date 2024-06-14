@@ -72,7 +72,6 @@ class BallTree:
                 split.S_n.persist()
                 return split
             #
-            #
         elif type(S_n) == tuple:
             X = S_n[1]
             if len(X) < self.min_samples_to_split: return split
@@ -126,12 +125,20 @@ class BallTree:
         
     def explore_nodes(self, split, x, pq, K):
         #print('len(pq)', len(pq), K)
+        # distance to the ball, negative when inside the ball
         d = BallTree.squared_distance(split.center, x) - split.radius
+        # distance to the sample in the top of the heap
         d_pq = BallTree.squared_distance(x, pq[0][2]) if len(pq) > 0 else numpy.inf
-        if d > d_pq:
+        if d > d_pq: # the sample x is further from the ball than to the sample on top of the heap
             return None
         elif split.S_n is not None:
             distances = ((split.S_n[1] - x) ** 2).sum(axis = 1)
+            if len(distances.shape) != 1:
+                raise Exception(f'incorrect shape {distances.shape}')
+            # chooses samples from the subset S_n whose distance to x is lower than the distance
+            # to the top of the heap and updates 'd_pq', the distance to the heap, 
+            # i.e., to the furthest sample in the set of K nearest neighbours so far, that is why
+            # it is not possible to use a filter and we have to visit all the samples in the ball
             for i in range(len(split.S_n[0])):
                 if distances[i] < d_pq:
                     y = split.S_n[0][i]
@@ -142,32 +149,16 @@ class BallTree:
                     else:
                         heapq.heappush(pq, item)
                     d_pq = BallTree.squared_distance(x, pq[0][2]) if len(pq) > 0 else numpy.inf
-            '''
-            zzz = [(i, distances[i]) for i in range(len(distances))]
-            zzz.sort(key = lambda t: t[1])
-            for i, d in zzz:
-                if d < d_pq:
-                    y = split.S_n[0][i]
-                    z = split.S_n[1][i]
-                    item = (-d, y, z)
-                    if len(pq) >= K:
-                        heapq.heapreplace(pq, item)
-                    else:
-                        heapq.heappush(pq, item)
-                    d_pq = BallTree.squared_distance(x, pq[0][2]) if len(pq) > 0 else numpy.inf
-                else:
-                    break
-            '''
         else:
             dl = numpy.inf
             dr = numpy.inf
-            if split.left  is not None: dl = ((split.left.center - x) ** 2).sum()
+            if split.left  is not None: dl = ((split.left.center  - x) ** 2).sum()
             if split.right is not None: dr = ((split.right.center - x) ** 2).sum()
             if dl <= dr:
-                if split.left  is not None: self.explore_nodes(split.left, x, pq, K)
+                if split.left  is not None: self.explore_nodes(split.left,  x, pq, K)
                 if split.right is not None: self.explore_nodes(split.right, x, pq, K)
             else:
                 if split.right is not None: self.explore_nodes(split.right, x, pq, K)
-                if split.left  is not None: self.explore_nodes(split.left, x, pq, K)
+                if split.left  is not None: self.explore_nodes(split.left,  x, pq, K)
         return None
     # ------------------------------------------------------------------------------
