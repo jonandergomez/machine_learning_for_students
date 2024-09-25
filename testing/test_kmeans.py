@@ -126,7 +126,7 @@ if __name__ == '__main__':
         y_reduced = y[:N_paint]
         #
         print('computing silhoutte score for model', i)
-        silh_score = silhouette_score(X, y)
+        silh_score = silhouette_score(X, y) if len(X) <= 20000 else 0.0
         print('computing calinski-harabasz score for model', i)
         ch_score = calinski_harabasz_score(X, y)
         print('computing davies-bouldin score for model', i)
