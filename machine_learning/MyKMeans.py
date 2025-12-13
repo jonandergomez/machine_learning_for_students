@@ -71,6 +71,8 @@ class KMeans:
             self.cluster_centers_ = numpy.zeros([self.n_clusters, X.shape[1]])
             if self.init in ['Katsavounidis', 'KMeans++']:
                 self.katsavounidis(X)
+            elif self.init in ['Katsavounidis Extended', 'KMeans++ Extended']:
+                self.extended_katsavounidis(X)
             elif self.init == 'random':
                 for c in range(self.n_clusters):
                     self.cluster_centers_[c][:] = X[numpy.random.randint(len(X))]
@@ -359,6 +361,37 @@ class KMeans:
             self.cluster_centers_[0, :] = X[numpy.argmax(distances), :]
     # --------------------------------------------------------------------------------
 
+    # --------------------------------------------------------------------------------
+    def extended_katsavounidis(self, X, m = 100):
+        """
+            1. Choose 'm' random samples
+
+            2. Set cluster_centers_[1] = mean of the 'm' randomdly chosen samples
+
+            3. For k = to K do
+                3.a Choose '2 * m' random samples
+                3.b Get the 'm' most distant samples to all the cluster
+                    centers computed so far (cluster_centers_[:k])
+                3.c Set cluster_centers_[k] = mean of the 'm' samples
+        """
+        if self.X_norm_squared is None:
+            self.X_norm_squared = (X ** 2).sum(axis = 1).reshape(-1, 1)
+        #
+        # 1. Choose 'm' samples
+        x = X[random.sample(range(len(X)), m)]
+        # 2. Set cluster_centers_[1] = mean of the 'm' randomdly chosen samples
+        self.cluster_centers_[0, :] = x.mean(axis = 0)
+        # 3. For k = to K do
+        for c in range(1, self.n_clusters):
+            # 3.a Choose '2 * m' random samples
+            x = X[random.sample(range(len(X)), 2 * m)]
+            # 3.b Get the 'm' most distant samples to all the cluster centers computed so far (cluster_centers_[:k])
+            distances = euclidean_distances(x, self.cluster_centers_[:c], squared = True)
+            d = numpy.argsort(numpy.min(distances, axis = 1))
+            # 3.c Set cluster_centers_[k] = mean of the 'm' samples
+            #self.cluster_centers_[c, :] = x[d[m:]].mean(axis = 0)
+            self.cluster_centers_[c, :] = x[d[m]]
+    # --------------------------------------------------------------------------------
 
     # -------------------------------------------------------------------------
     def save(self, filename = None):

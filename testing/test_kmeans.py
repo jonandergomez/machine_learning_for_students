@@ -55,7 +55,8 @@ if __name__ == '__main__':
     kmediods = KMeans(n_clusters = K, verbosity = 1, modality = 'k-Mediods', init = 'KMeans++')
     lloyd.epsilon = 1.0e-8
     original_kmeans = KMeans(n_clusters = K, verbosity = 1, modality = 'original-k-Means')
-    selective_splitting   = KMeans(n_clusters = K, verbosity = 1, modality = 'Lloyd', init = 'KMeans++')
+    #selective_splitting   = KMeans(n_clusters = K, verbosity = 1, modality = 'Lloyd', init = 'KMeans++')
+    selective_splitting   = KMeans(n_clusters = K, verbosity = 1, modality = 'Lloyd', init = 'KMeans++ Extended')
     selective_splitting.epsilon = 1.0e-9
 
     if generated_data_type == 'uniform':
@@ -79,7 +80,8 @@ if __name__ == '__main__':
 
     print('estimating with new version')
     starting_time = time.process_time_ns()
-    selective_splitting.selective_splitting(X, K = K, verbose = 1)
+    #selective_splitting.selective_splitting(X, K = K, verbose = 1)
+    selective_splitting.fit(X)
     selective_splitting_process_time = time.process_time_ns() - starting_time
     print() #selective_splitting.n_clusters)
 
